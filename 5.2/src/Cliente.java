@@ -1,5 +1,6 @@
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.Inet4Address;
 import java.net.Socket;
 import java.util.Scanner;
 
@@ -14,7 +15,7 @@ public class Cliente {
 	 para la interacci ́on con el usuario del sistema 
 	 */
 	private static String usuario;
-	static String ip = "localhost";
+	static String ip;
 	static Socket s;
 	private static ObjectInputStream finc;
 	private static ObjectOutputStream foutc;
@@ -42,6 +43,8 @@ public class Cliente {
 		 as ́ı que  ́este actualice apropiadamente su base de datos.
 		 
 		 */
+		ip = Inet4Address.getLocalHost().getHostAddress();
+		print(ip);
 		
 		keyboard = new Scanner(System.in);
 		System.out.print("Introduzca usuario: ");
@@ -84,9 +87,6 @@ public class Cliente {
 		case 3:
 			m = new Msj_Vacio(Msj.CERRAR_CONEXION,usuario,OyenteCliente.origen);
 			foutc.writeObject(m);
-			m = (Mensaje) finc.readObject();
-			if (m.getTipo() != Msj.CONFIRMACION_CERRAR_CONEXION)
-				throw new Exception("Esperaba confirmación de cierre de conexión");
 			break;		
 		}
 		if(opcion != 3) recursion();		
@@ -99,5 +99,7 @@ public class Cliente {
 		System.out.print("Introduzca acción: ");
 		return keyboard.nextInt();
 	}
-
+	public static void print(Object s) {
+		System.out.println(s);
+	}
 }

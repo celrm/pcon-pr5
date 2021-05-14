@@ -6,7 +6,6 @@ import java.net.Socket;
 public class OyenteCliente extends Thread {
 	final static String origen = "S";
 	private Socket s;
-	private String destino;
 	private ObjectInputStream fin;
 	private ObjectOutputStream fout;
 	/*
@@ -23,6 +22,7 @@ public class OyenteCliente extends Thread {
 	public void run() {
 		try {
 			fin = new ObjectInputStream(s.getInputStream());
+			fout = new ObjectOutputStream(s.getOutputStream());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -31,34 +31,41 @@ public class OyenteCliente extends Thread {
 			Mensaje m;
 			try {
 			m = (Mensaje) fin.readObject();
+			if(m.getDestino() != origen) continue; // está pocho
 			Mensaje n;
 			switch(m.getTipo()) {
 			case CONEXION:
-				guardar_usuario();
-				n = new Msj_Vacio(Msj.CONFIRMACION_CONEXION,origen,destino);
+				guardar_usuario(m.getOrigen());
+				n = new Msj_Vacio(Msj.CONFIRMACION_CONEXION,origen,m.getOrigen());
 				fout.writeObject(n);
 				break;
 			case LISTA_USARIOS:
 				String lista = usuarios_sistema();
-				n = new Msj_String(Msj.CONFIRMACION_LISTA_USUARIOS,origen,destino,lista);
-				fout.writeObject(n);
-				break;
-			case CERRAR_CONEXION:
-				eliminar_usuario();
-				n = new Msj_Vacio(Msj.CONFIRMACION_CERRAR_CONEXION,origen,destino);
+				n = new Msj_String(Msj.CONFIRMACION_LISTA_USUARIOS,origen,m.getOrigen(),lista);
 				fout.writeObject(n);
 				break;
 			case PEDIR_FICHERO:
 				String fichero = ((Msj_String) m).getContent();
 				String destino2 = buscar_usuario(fichero);
 				ObjectOutputStream fout2 = buscar_output(destino2);
-				n = new Msj_String(Msj.EMITIR_FICHERO,origen,destino2,destino);
+				n = new Msj_MasCosas(Msj.EMITIR_FICHERO,origen,destino2);
+				((Msj_MasCosas)n).setContent1(m.getOrigen());
+				((Msj_MasCosas)n).setContent2(fichero);
 				fout2.writeObject(n);
 				break;
 			case PREPARADO_CLIENTESERVIDOR:
-				destino = ((Msj_String) m).getContent();
-				fout = buscar_output(destino);
-				n = new Msj_Vacio(Msj.PREPARADO_SERVIDORCLIENTE,origen,destino);
+				String receptor = ((Msj_MasCosas) m).getContent1();
+				String ip_emisor = ((Msj_MasCosas) m).getContent2();
+				int puerto_emisor = ((Msj_MasCosas) m).getEntero1();
+				fout2 = buscar_output(receptor);
+				n = new Msj_MasCosas(Msj.PREPARADO_SERVIDORCLIENTE,origen,receptor);
+				((Msj_MasCosas)n).setContent1(ip_emisor);
+				((Msj_MasCosas)n).setEntero1(puerto_emisor);
+				fout2.writeObject(n);
+				break;
+			case CERRAR_CONEXION:
+				eliminar_usuario(m.getOrigen());
+				n = new Msj_Vacio(Msj.CONFIRMACION_CERRAR_CONEXION,origen,m.getOrigen());
 				fout.writeObject(n);
 				break;
 			default:
@@ -81,7 +88,7 @@ public class OyenteCliente extends Thread {
 		
 	}
 
-	private void eliminar_usuario() {
+	private void eliminar_usuario(String usuario) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -92,7 +99,7 @@ public class OyenteCliente extends Thread {
 		
 	}
 
-	private void guardar_usuario() {
+	private void guardar_usuario(String usuario) {
 		// TODO Auto-generated method stub
 		
 	}
