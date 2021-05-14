@@ -16,6 +16,7 @@ public class Servidor {
 	El servidor espera la llegada de peticiones de inicio de sesi ́on, y asocia un hilo de
 	ejecuci ́on con cada usuario.
 	*/
+	final static String origen = "S";
 	private static ServerSocket ss;
 	static int puerto = 500;
 	static String ip = "localhost";
@@ -23,7 +24,7 @@ public class Servidor {
 
 	public static void main(String[] args) throws IOException {
 		usuarios = new HashMap<String,Usuario> ();
-		init();
+//		init();
 		/*		
 		El servidor atiende de forma concurrente todas las peticiones que realizan los clientes
 		conectados al sistema, en particular:

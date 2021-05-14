@@ -4,7 +4,6 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 public class OyenteCliente extends Thread {
-	final static String origen = "S";
 	private Socket s;
 	private ObjectInputStream fin;
 	private ObjectOutputStream fout;
@@ -31,24 +30,26 @@ public class OyenteCliente extends Thread {
 			Mensaje m;
 			try {
 			m = (Mensaje) fin.readObject();
-			if(m.getDestino() != origen) continue; // está pocho
+			System.out.println("Recibido "+m.getTipo()+ " de "+m.getOrigen()+" para "+m.getDestino()); 
+			System.out.flush();
+			if(!m.getDestino().equals(Servidor.origen)) continue; // está pocho			
 			Mensaje n;
 			switch(m.getTipo()) {
 			case CONEXION:
 				guardar_usuario(m.getOrigen());
-				n = new Msj_Vacio(Msj.CONFIRMACION_CONEXION,origen,m.getOrigen());
+				n = new Msj_Vacio(Msj.CONFIRMACION_CONEXION,Servidor.origen,m.getOrigen());
 				fout.writeObject(n);
 				break;
 			case LISTA_USARIOS:
 				String lista = usuarios_sistema();
-				n = new Msj_String(Msj.CONFIRMACION_LISTA_USUARIOS,origen,m.getOrigen(),lista);
+				n = new Msj_String(Msj.CONFIRMACION_LISTA_USUARIOS,Servidor.origen,m.getOrigen(),lista);
 				fout.writeObject(n);
 				break;
 			case PEDIR_FICHERO:
 				String fichero = ((Msj_String) m).getContent();
 				String destino2 = buscar_usuario(fichero);
 				ObjectOutputStream fout2 = buscar_output(destino2);
-				n = new Msj_MasCosas(Msj.EMITIR_FICHERO,origen,destino2);
+				n = new Msj_MasCosas(Msj.EMITIR_FICHERO,Servidor.origen,destino2);
 				((Msj_MasCosas)n).setContent1(m.getOrigen());
 				((Msj_MasCosas)n).setContent2(fichero);
 				fout2.writeObject(n);
@@ -58,16 +59,16 @@ public class OyenteCliente extends Thread {
 				String ip_emisor = ((Msj_MasCosas) m).getContent2();
 				int puerto_emisor = ((Msj_MasCosas) m).getEntero1();
 				fout2 = buscar_output(receptor);
-				n = new Msj_MasCosas(Msj.PREPARADO_SERVIDORCLIENTE,origen,receptor);
+				n = new Msj_MasCosas(Msj.PREPARADO_SERVIDORCLIENTE,Servidor.origen,receptor);
 				((Msj_MasCosas)n).setContent1(ip_emisor);
 				((Msj_MasCosas)n).setEntero1(puerto_emisor);
 				fout2.writeObject(n);
 				break;
 			case CERRAR_CONEXION:
 				eliminar_usuario(m.getOrigen());
-				n = new Msj_Vacio(Msj.CONFIRMACION_CERRAR_CONEXION,origen,m.getOrigen());
+				n = new Msj_Vacio(Msj.CONFIRMACION_CERRAR_CONEXION,Servidor.origen,m.getOrigen());
 				fout.writeObject(n);
-				break;
+				return;
 			default:
 				break;
 			}

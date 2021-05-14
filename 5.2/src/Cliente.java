@@ -1,4 +1,3 @@
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Inet4Address;
 import java.net.Socket;
@@ -17,9 +16,9 @@ public class Cliente {
 	private static String usuario;
 	static String ip;
 	static Socket s;
-	private static ObjectInputStream finc;
 	private static ObjectOutputStream foutc;
 	private static Scanner keyboard;
+	private static Thread oyS; 
 
 	public static void main(String[] args) throws Exception {
 		/*
@@ -44,52 +43,55 @@ public class Cliente {
 		 
 		 */
 		ip = Inet4Address.getLocalHost().getHostAddress();
-		print(ip);
 		
 		keyboard = new Scanner(System.in);
 		System.out.print("Introduzca usuario: ");
 		usuario = keyboard.nextLine();
+		while(usuario.equals(Servidor.origen)) {
+			System.out.print("Usuario inválido. Introduzca usuario: ");
+			usuario = keyboard.nextLine();
+		}
+		System.out.println("Usted es " +usuario); System.out.flush();
 		
 		s = new Socket(Servidor.ip,Servidor.puerto);
-		(new OyenteServidor(s,usuario)).start(); // segundo plano para "dar" info
+		oyS = (new OyenteServidor(s,usuario));
+		oyS.start(); // segundo plano para "dar" info
 		
-		finc = new ObjectInputStream(s.getInputStream());
 		foutc = new ObjectOutputStream(s.getOutputStream());
+		System.out.println("Conexión pedida."); System.out.flush();
 		
-		Mensaje n = new Msj_Vacio(Msj.CONEXION,usuario,OyenteCliente.origen);
-		foutc.writeObject(n); // recuerda los flushes
+		Mensaje n = new Msj_Vacio(Msj.CONEXION,usuario,Servidor.origen);
+		foutc.writeObject(n); foutc.flush(); // recuerda los flushes
+		
+		opciones();
 
-		recursion();
+		System.out.println("Esperando a OyenteServidor."); System.out.flush();
+		oyS.join();
 		
 		keyboard.close();
 	}
 
-	private static void recursion() throws Exception {
+	private static void opciones() throws Exception {
 		Mensaje m;
 		int opcion = menu_opcion();
 		while(opcion < 1 || opcion > 3) opcion = menu_opcion();
 		switch(opcion) {
 		case 1:
-			m = new Msj_Vacio(Msj.LISTA_USARIOS,usuario,OyenteCliente.origen);
-			foutc.writeObject(m);
-			m = (Mensaje) finc.readObject();
-			if (m.getTipo() != Msj.CONFIRMACION_LISTA_USUARIOS)
-				throw new Exception("Esperaba confirmación de lista usuarios");
-			System.out.println(((Msj_String) m).getContent());
+			m = new Msj_Vacio(Msj.LISTA_USARIOS,usuario,Servidor.origen);
+			foutc.writeObject(m); foutc.flush();
 			break;
 		case 2:
 			System.out.print("Introduzca fichero: ");
 			String fichero = keyboard.nextLine();
-			m = new Msj_String(Msj.PEDIR_FICHERO,usuario,OyenteCliente.origen,fichero);
-			foutc.writeObject(m);
-			// TODO protocolo conseguir fichero
+			m = new Msj_String(Msj.PEDIR_FICHERO,usuario,Servidor.origen,fichero);
+			foutc.writeObject(m); foutc.flush();
 			break;
 		case 3:
-			m = new Msj_Vacio(Msj.CERRAR_CONEXION,usuario,OyenteCliente.origen);
-			foutc.writeObject(m);
-			break;		
+			m = new Msj_Vacio(Msj.CERRAR_CONEXION,usuario,Servidor.origen);
+			foutc.writeObject(m); foutc.flush();
+			return;
 		}
-		if(opcion != 3) recursion();		
+//		if(opcion != 3) opciones();		
 	}
 
 	private static int menu_opcion() {
@@ -97,9 +99,7 @@ public class Cliente {
 		System.out.println("\t(2) Pida fichero");
 		System.out.println("\t(3) Salir");
 		System.out.print("Introduzca acción: ");
+		System.out.flush();
 		return keyboard.nextInt();
-	}
-	public static void print(Object s) {
-		System.out.println(s);
 	}
 }
