@@ -1,11 +1,8 @@
 import java.io.Serializable;
 
 public abstract class Mensaje implements Serializable {
-	/*
-	Sirve como ra ́ız de la jerarqu ́ıa de mensajes que debere-mos dise ̃nar. 
-	Tiene como atributos al tipo, origen y destino del mensaje en cuesti ́on;
-	y declara al menos los siguientes m ́etodos:
-	*/
+	private static final long serialVersionUID = 1L;
+
 	private Msj tipo;
 	private String origen;
 	private String destino;

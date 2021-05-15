@@ -7,13 +7,7 @@ public class OyenteCliente extends Thread {
 	private Socket s;
 	private ObjectInputStream fin;
 	private ObjectOutputStream fout;
-	/*
-	Implementa el interfaz “Runnable” o hereda de la clase “Th-read”,  
-	y  es  usada  para  proporcionar  concurrencia  respecto  a  las  sesiones  de  cada
-	usuario con el servidor. El m ́etodo “run()” se limita a hacer lecturas del flujo de
-	entrada correspondiente, realizar las acciones oportunas, y devolver los resultados
-	en forma de mensajes que ser ́an enviados al usuario o usuarios involucrados.
-	*/
+
 	public OyenteCliente(Socket s) {
 		this.s = s;
 	}
@@ -27,81 +21,88 @@ public class OyenteCliente extends Thread {
 		}
 
 		while (true) {
-			Mensaje m;
+			Mensaje msj;
 			try {
-			m = (Mensaje) fin.readObject();
-			System.out.println("Recibido "+m.getTipo()+ " de "+m.getOrigen()+" para "+m.getDestino()); 
+			msj = (Mensaje) fin.readObject();
+			System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+msj.getDestino()); 
 			System.out.flush();
-			if(!m.getDestino().equals(Servidor.origen)) continue; // está pocho			
-			Mensaje n;
-			switch(m.getTipo()) {
+			if(!msj.getDestino().equals(Servidor.origen)) continue; // está pocho			
+			Msj_Information send;
+			switch(msj.getTipo()) {
 			case CONEXION:
-				guardar_usuario(m.getOrigen());
-				n = new Msj_Vacio(Msj.CONFIRMACION_CONEXION,Servidor.origen,m.getOrigen());
-				fout.writeObject(n);
+				guardar_usuario(msj.getOrigen());
+				send = new Msj_Information(Msj.CONFIRMACION_CONEXION,Servidor.origen,msj.getOrigen());
+				fout.writeObject(send);
 				break;
 			case LISTA_USARIOS:
 				String lista = usuarios_sistema();
-				n = new Msj_String(Msj.CONFIRMACION_LISTA_USUARIOS,Servidor.origen,m.getOrigen(),lista);
-				fout.writeObject(n);
+				send = new Msj_Information(Msj.CONFIRMACION_LISTA_USUARIOS,Servidor.origen,msj.getOrigen());
+				send.setContent1(lista);
+				fout.writeObject(send);
 				break;
 			case PEDIR_FICHERO:
-				String fichero = ((Msj_String) m).getContent();
+				String fichero = ((Msj_Information) msj).getContent1();			
 				String destino2 = buscar_usuario(fichero);
 				ObjectOutputStream fout2 = buscar_output(destino2);
-				n = new Msj_MasCosas(Msj.EMITIR_FICHERO,Servidor.origen,destino2);
-				((Msj_MasCosas)n).setContent1(m.getOrigen());
-				((Msj_MasCosas)n).setContent2(fichero);
-				fout2.writeObject(n);
+				send = new Msj_Information(Msj.EMITIR_FICHERO,Servidor.origen,destino2);
+				send.setContent1(msj.getOrigen());
+				send.setContent2(fichero);
+				fout2.writeObject(send);
 				break;
 			case PREPARADO_CLIENTESERVIDOR:
-				String receptor = ((Msj_MasCosas) m).getContent1();
-				String ip_emisor = ((Msj_MasCosas) m).getContent2();
-				int puerto_emisor = ((Msj_MasCosas) m).getEntero1();
+				String receptor = ((Msj_Information) msj).getContent1();
+				String ip_emisor = ((Msj_Information) msj).getContent2();
+				int puerto_emisor = ((Msj_Information) msj).getEntero1();
 				fout2 = buscar_output(receptor);
-				n = new Msj_MasCosas(Msj.PREPARADO_SERVIDORCLIENTE,Servidor.origen,receptor);
-				((Msj_MasCosas)n).setContent1(ip_emisor);
-				((Msj_MasCosas)n).setEntero1(puerto_emisor);
-				fout2.writeObject(n);
+				send = new Msj_Information(Msj.PREPARADO_SERVIDORCLIENTE,Servidor.origen,receptor);
+				send.setContent1(ip_emisor);
+				send.setEntero1(puerto_emisor);
+				fout2.writeObject(send);
 				break;
 			case CERRAR_CONEXION:
-				eliminar_usuario(m.getOrigen());
-				n = new Msj_Vacio(Msj.CONFIRMACION_CERRAR_CONEXION,Servidor.origen,m.getOrigen());
-				fout.writeObject(n);
+				eliminar_usuario(msj.getOrigen());
+				send = new Msj_Information(Msj.CONFIRMACION_CERRAR_CONEXION,Servidor.origen,msj.getOrigen());
+				fout.writeObject(send);
+				s.close();
 				return;
 			default:
 				break;
 			}
-			} catch (ClassNotFoundException | IOException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 	}
 
-	private ObjectOutputStream buscar_output(String destino2) {
-		// TODO Auto-generated method stub
-		return null;
+	private ObjectOutputStream buscar_output(String usuario) {
+		Usuario u = Servidor.usuarios.get(usuario);
+		return u.getOutput();
 	}
 
 	private String buscar_usuario(String fichero) {
+		for(Usuario u : Servidor.usuarios.values()) {			
+			for(String f : u.getCompartido()) {
+				if(f.equals(fichero))
+					return u.getId();
+			}
+		}
 		return null;
-		// TODO Auto-generated method stub
-		
 	}
 
 	private void eliminar_usuario(String usuario) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	private String usuarios_sistema() {
-		return null;
-		// TODO Auto-generated method stub
-		
+		String lista = "";
+		for(Usuario u : Servidor.usuarios.values()) {
+			lista = lista.concat(u.getId()).concat("\n");
+		}
+		return lista;
 	}
 
 	private void guardar_usuario(String usuario) {
-		// TODO Auto-generated method stub
-		
+		Usuario u = Servidor.usuarios.get(usuario);
+		u.setOutput(fout);
 	}
 }

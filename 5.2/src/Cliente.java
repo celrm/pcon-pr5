@@ -2,46 +2,18 @@ import java.io.ObjectOutputStream;
 import java.net.Inet4Address;
 import java.net.Socket;
 import java.util.Scanner;
+import java.util.concurrent.Semaphore;
 
 public class Cliente {
-	
-	/*
-	 Clase principal de la aplicaci ́on cliente. Tendr ́a al menos los siguientes
-	 atributos: nombre de usuario, direcci ́on ip de la m ́aquina. Puedes tener tambi ́en como
-	 atributos  los  objetos  que  proporcionan  la  comunicaci ́on  con  el  servidor  (socket  y
-	 flujos). Es responsable de llevar a cabo la comunicaci ́on con el servidor, y cuando
-	 sea necesario ejecutar el env ́ıo o recepci ́on de informaci ́on. Adem ́as ofrece el soporte
-	 para la interacci ́on con el usuario del sistema 
-	 */
 	private static String usuario;
-	static String ip;
-	static Socket s;
+	private static String ip;
 	private static ObjectOutputStream foutc;
 	private static Scanner keyboard;
-	private static Thread oyS; 
+	static Semaphore terminal; // con paso de testigo
 
 	public static void main(String[] args) throws Exception {
-		/*
-		 	 
-		 Una vez iniciada la sesi ́on, el cliente puede realizar dos tipos de acciones: consultar
-		 el nombre de todos los usuarios conectados y la informaci ́on que poseen, o descargar
-		 informaci ́on.
-		 
-		 Una vez el usuario elija la informaci ́on a descargar, comenzar ́a el proceso de descarga
-		 (en realidad se descarga directamente de la m ́aquina del usuario propietario) de tal
-		 forma que el programa cliente siga su curso natural, y en particular permitiendo que
-		 se realicen otras acciones e incluso otras descargas mientras continua la descarga de
-		 la primera informaci ́on.
-		 
-		 Al margen de la voluntad del usuario, el programa cliente puede actuar como emisor
-		 de  cualquier  informaci ́on  de  la  que  dispone  compartida,  como  propietario  de  una
-		 informaci ́on que otro cliente solicite. Esta acci ́on ser ́a llevada a cabo en un segundo
-		 plano permitiendo al usuario continuar con el uso normal de la aplicaci ́on.
-		 
-		 Al terminar la aplicaci ́on se deber ́a comunicar el fin de sesi ́on al servidor, y permitir
-		 as ́ı que  ́este actualice apropiadamente su base de datos.
-		 
-		 */
+		
+		terminal = new Semaphore(1);
 		ip = Inet4Address.getLocalHost().getHostAddress();
 		
 		keyboard = new Scanner(System.in);
@@ -50,56 +22,60 @@ public class Cliente {
 		while(usuario.equals(Servidor.origen)) {
 			System.out.print("Usuario inválido. Introduzca usuario: ");
 			usuario = keyboard.nextLine();
-		}
-		System.out.println("Usted es " +usuario); System.out.flush();
-		
-		s = new Socket(Servidor.ip,Servidor.puerto);
-		oyS = (new OyenteServidor(s,usuario));
-		oyS.start(); // segundo plano para "dar" info
-		
+		}		
+		Socket s = new Socket(Servidor.ip,Servidor.puerto);
 		foutc = new ObjectOutputStream(s.getOutputStream());
-		System.out.println("Conexión pedida."); System.out.flush();
+
+		(new OyenteServidor(s,foutc)).start();
 		
-		Mensaje n = new Msj_Vacio(Msj.CONEXION,usuario,Servidor.origen);
-		foutc.writeObject(n); foutc.flush(); // recuerda los flushes
+		terminal.acquire();
+		Mensaje n = new Msj_Information(Msj.CONEXION,usuario,Servidor.origen);
+		foutc.writeObject(n); foutc.flush();
 		
 		opciones();
 
-		System.out.println("Esperando a OyenteServidor."); System.out.flush();
-		oyS.join();
-		
 		keyboard.close();
 	}
 
 	private static void opciones() throws Exception {
-		Mensaje m;
+		Msj_Information send;
+		terminal.acquire();
 		int opcion = menu_opcion();
 		while(opcion < 1 || opcion > 3) opcion = menu_opcion();
 		switch(opcion) {
 		case 1:
-			m = new Msj_Vacio(Msj.LISTA_USARIOS,usuario,Servidor.origen);
-			foutc.writeObject(m); foutc.flush();
+			send = new Msj_Information(Msj.LISTA_USARIOS,usuario,Servidor.origen);
+			foutc.writeObject(send); foutc.flush();
 			break;
 		case 2:
-			System.out.print("Introduzca fichero: ");
+			System.out.print("Introduzca fichero: "); 
 			String fichero = keyboard.nextLine();
-			m = new Msj_String(Msj.PEDIR_FICHERO,usuario,Servidor.origen,fichero);
-			foutc.writeObject(m); foutc.flush();
+			send = new Msj_Information(Msj.PEDIR_FICHERO,usuario,Servidor.origen);
+			send.setContent1(fichero);
+			foutc.writeObject(send); foutc.flush();
 			break;
 		case 3:
-			m = new Msj_Vacio(Msj.CERRAR_CONEXION,usuario,Servidor.origen);
-			foutc.writeObject(m); foutc.flush();
+			send = new Msj_Information(Msj.CERRAR_CONEXION,usuario,Servidor.origen);
+			foutc.writeObject(send); foutc.flush();
 			return;
 		}
-//		if(opcion != 3) opciones();		
+		opciones();		
 	}
 
 	private static int menu_opcion() {
-		System.out.println("\t(1) Consultar lista usuarios");
-		System.out.println("\t(2) Pida fichero");
-		System.out.println("\t(3) Salir");
-		System.out.print("Introduzca acción: ");
-		System.out.flush();
-		return keyboard.nextInt();
+		String mensaje = "\t(1) Consultar lista usuarios\n" +
+				"\t(2) Pida fichero\n" +
+				"\t(3) Salir\n"+
+				"Introduzca acción: ";
+		System.out.println(mensaje); System.out.flush();
+		return Integer.parseInt(keyboard.nextLine()); 
+	}
+
+	public static String ip() {
+		return ip;
+	}
+
+	public static String usuario() {
+		return usuario;
 	}
 }

@@ -1,10 +1,11 @@
 
-public class Msj_MasCosas extends Mensaje {
+public class Msj_Information extends Mensaje {
+	private static final long serialVersionUID = 3L;
 	private String content1;
 	private String content2;
 	private int entero1;
 
-	public Msj_MasCosas(Msj t, String o, String d) {
+	public Msj_Information(Msj t, String o, String d) {
 		super(t,o,d);
 	}
 

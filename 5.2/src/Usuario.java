@@ -1,3 +1,4 @@
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
 public class Usuario {
@@ -5,24 +6,13 @@ public class Usuario {
 	private String id;
 	private String ip;
 	private ArrayList<String> compartido;
+	private ObjectOutputStream fout;
 	
 	public Usuario(String id, String ip, ArrayList<String> compartido) {
 		this.setId(id);
 		this.setIp(ip);
 		this.setCompartido(compartido);
 	}
-	/*
-	Guarda informaci ́on para un usuario registrado en el sistema. Tendr ́a
-	al menos los siguientes atributos: identificador de usuario, direcci ́on ip y lista de 
-	informaci ́on compartida. El servidor almacenar ́a informaci ́on sobre todos los usuarios
-	registrados en el sistema (instancias de la clase Usuario).
-	
-	
-	////// no de esta clase:
-	Ser ́a necesario implementar adem ́as varias clases adicionales. En particular: 
-	clases paracada tipo de mensaje, clases para la interfaz con el usuario, etc. 
-	(GUI o de texto).
-	*/
 
 	public String getId() {
 		return id;
@@ -46,5 +36,13 @@ public class Usuario {
 
 	private void setIp(String ip) {
 		this.ip = ip;
+	}
+
+	public ObjectOutputStream getOutput() {
+		return fout;
+	}
+
+	public void setOutput(ObjectOutputStream fout) {
+		this.fout = fout;
 	}
 }
