@@ -34,27 +34,36 @@ System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+ms
 			case LISTA_USARIOS:
 				String lista = datos.usuarios_sistema();
 				send = new Msj_Information(Msj.CONFIRMACION_LISTA_USUARIOS,Servidor.origen,msj.getOrigen());
-				send.setContent1(lista);
+				send.putContent(lista);
 				fout.writeObject(send);
 				break;
 			case PEDIR_FICHERO:
-				String fichero = ((Msj_Information) msj).getContent1();			
+				String fichero = ((Msj_Information) msj).getContent(0);			
 				String emisor = datos.buscar_usuario(fichero);
-				send = new Msj_Information(Msj.EMITIR_FICHERO,Servidor.origen,emisor);
-				send.setContent1(msj.getOrigen()); // este es el receptor
-				send.setContent2(fichero);
-				ObjectOutputStream fout2 = datos.buscar_output(emisor);
-				fout2.writeObject(send);
-				break;
+				if(emisor != null) {
+					send = new Msj_Information(Msj.EMITIR_FICHERO,Servidor.origen,emisor);
+					send.putContent(msj.getOrigen()); // este es el receptor
+					send.putContent(fichero);
+					ObjectOutputStream fout2 = datos.buscar_output(emisor);
+					fout2.writeObject(send);
+				}
+				else {	
+					send = new Msj_Information(Msj.ERROR,Servidor.origen,msj.getOrigen());
+					send.putContent("No hay usuarios conectados con ese fichero "+fichero);
+					fout.writeObject(send);
+				}
+					break;
 			case PREPARADO_CLIENTESERVIDOR:
-				String receptor = ((Msj_Information) msj).getContent1();
-				String ip_emisor = ((Msj_Information) msj).getContent2();
+				String receptor = ((Msj_Information) msj).getContent(0);
+				String ip_emisor = ((Msj_Information) msj).getContent(1);
+				String fich = ((Msj_Information) msj).getContent(2);
 				int puerto_emisor = ((Msj_Information) msj).getEntero1();
 				send = new Msj_Information(Msj.PREPARADO_SERVIDORCLIENTE,Servidor.origen,receptor);
-				send.setContent1(ip_emisor);
+				send.putContent(fich);
+				send.putContent(ip_emisor);
 				send.setEntero1(puerto_emisor);
-				fout2 = datos.buscar_output(receptor);
-				fout2.writeObject(send);
+				ObjectOutputStream fout1 = datos.buscar_output(receptor);
+				fout1.writeObject(send);
 				break;
 			case CERRAR_CONEXION:
 				datos.eliminar_usuario(msj.getOrigen());

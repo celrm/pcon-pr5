@@ -1,29 +1,24 @@
 package ambos;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Msj_Information extends Mensaje {
 	private static final long serialVersionUID = 3L;
-	private String content1;
-	private String content2;
+	private List<String> content;
 	private int entero1;
 
 	public Msj_Information(Msj t, String o, String d) {
 		super(t,o,d);
+		content = new ArrayList<>();
 	}
 
-	public String getContent2() {
-		return content2;
+	public String getContent(int i) {
+		return content.get(i);
 	}
 
-	public void setContent2(String content2) {
-		this.content2 = content2;
-	}
-
-	public String getContent1() {
-		return content1;
-	}
-
-	public void setContent1(String content1) {
-		this.content1 = content1;
+	public void putContent(String s) {
+		content.add(s);
 	}
 
 	public int getEntero1() {

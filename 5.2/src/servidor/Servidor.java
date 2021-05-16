@@ -31,7 +31,7 @@ public class Servidor {
 
 	private static void init() {
 		try {
-			File file = new File("users.txt");
+			File file = new File("servidor/users.txt");
 		    Scanner lectura = new Scanner(file);
 		    int number = 0;
 		    while (lectura.hasNextLine()) {

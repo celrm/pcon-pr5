@@ -21,7 +21,7 @@ public class Compartido {
 	String buscar_usuario(String fichero) {
 		for(Usuario u : usuarios.values()) {			
 			for(String f : u.getArchivos()) {
-				if(f.equals(fichero))
+				if(f.equals(fichero) && u.isConnected())
 					return u.getId();
 			}
 		}

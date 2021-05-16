@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 
 import ambos.*;
 import servidor.Servidor;
@@ -37,19 +38,20 @@ public class OyenteServidor extends Thread {
 			switch(msj.getTipo()) {
 			case CONFIRMACION_CONEXION:
 				System.out.println("Conexión establecida."); System.out.flush();
+				Cliente.sesion.release();
 				break;
 			case CONFIRMACION_LISTA_USUARIOS:
-				String lista = ((Msj_Information) msj).getContent1();
-
-				JOptionPane.showMessageDialog(null, lista,
-						"Lista de usuarios", JOptionPane.PLAIN_MESSAGE);
+				String lista = ((Msj_Information) msj).getContent(0);
+				JOptionPane.showMessageDialog(new JPanel(), lista, "Lista de usuarios", JOptionPane.PLAIN_MESSAGE);
+				Cliente.sesion.release();
 				break;
 			case EMITIR_FICHERO:
-				String receptor = ((Msj_Information) msj).getContent1();
-				String fichero = ((Msj_Information) msj).getContent2();
+				String receptor = ((Msj_Information) msj).getContent(0);
+				String fichero = ((Msj_Information) msj).getContent(1);
 				Msj_Information send = new Msj_Information(Msj.PREPARADO_CLIENTESERVIDOR,origen,destino);
-				send.setContent1(receptor);
-				send.setContent2(Cliente.ip());
+				send.putContent(receptor);
+				send.putContent(Cliente.ip());
+				send.putContent(fichero);
 				int puerto = 505; // TODO generar puertos
 				send.setEntero1(puerto);
 				
@@ -58,14 +60,21 @@ public class OyenteServidor extends Thread {
 				foutc.writeObject(send); foutc.flush();
 				break;
 			case PREPARADO_SERVIDORCLIENTE:
-				String ip_em = ((Msj_Information) msj).getContent1();
+				String fich = ((Msj_Information) msj).getContent(0);
+				String ip_em = ((Msj_Information) msj).getContent(1);
 				int p_em = ((Msj_Information) msj).getEntero1();
-				(new Receptor(origen,ip_em,p_em)).start();
+				(new Receptor(origen,ip_em,p_em,fich)).start();
+				Cliente.sesion.release();
 				break;
 			case CONFIRMACION_CERRAR_CONEXION:
-				JOptionPane.showMessageDialog(null, "¡Adiós!",
+				JOptionPane.showMessageDialog(Cliente.parent, "¡Adiós!",
 						"Despedida", JOptionPane.CLOSED_OPTION);
+				Cliente.sesion.release();
 				return;
+			case ERROR:
+				Cliente.error("Error recibido de "+msj.getOrigen(), 
+						((Msj_Information) msj).getContent(0));
+				Cliente.sesion.release();
 			default:
 				break;
 			}
