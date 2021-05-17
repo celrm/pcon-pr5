@@ -30,13 +30,11 @@ public class OyenteServidor extends Thread {
 	}
 	
 	public void run() {
-		
+		try {
 		while (true) {
 			Mensaje msj;
-			try {
 			msj = (Mensaje) finc.readObject();
-			System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+msj.getDestino()); 
-			System.out.flush();			
+System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+msj.getDestino()); System.out.flush();			
 			if(!msj.getDestino().equals(origen)) continue;
 			switch(msj.getTipo()) {
 			case CONFIRMACION_CONEXION:
@@ -79,7 +77,7 @@ public class OyenteServidor extends Thread {
 
 				ServerSocket ss = new ServerSocket(0);
 				int puerto = ss.getLocalPort();
-				send.setEntero1(puerto);
+				send.setEntero(puerto);
 				(new Emisor(origen,receptor,ss,fichero)).start();
 				
 				foutc.writeObject(send); foutc.flush();
@@ -95,19 +93,21 @@ public class OyenteServidor extends Thread {
 				break;
 			case CONFIRMACION_CERRAR_CONEXION:
 				Cliente.info("¡Adiós!");
-				Cliente.release_flow();
+				System.exit(0);
 				return;
 			case ERROR:
 				Cliente.error("Error recibido de "+msj.getOrigen()+":\n"+
 						((Msj_Information) msj).getContent(0));
-				if(((Msj_Information) msj).getEntero()>0)
-					Cliente.release_flow();
+				int codigo = ((Msj_Information) msj).getEntero();
+				if(codigo==1) Cliente.release_flow(); // error final flow
+				else if(codigo>1) System.exit(1); // error catastrófico
+				break;
 			default:
 				break;
 			}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+		}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 }

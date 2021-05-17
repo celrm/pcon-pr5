@@ -30,11 +30,11 @@ public class Msj_Information extends Mensaje {
 		return entero1;
 	}
 
-	public void setEntero1(int entero1) {
+	public void setEntero(int entero1) {
 		this.entero1 = entero1;
 	}
 
-	public void setContent(ArrayList<String> archivos) {
+	public void setContent(List<String> archivos) {
 		content = archivos;
 	}
 

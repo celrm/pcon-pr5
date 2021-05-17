@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.util.List;
 
-import ambos.*;
+import ambos.Mensaje;
+import ambos.Msj;
+import ambos.Msj_Information;
 
 public class OyenteCliente extends Thread {
 	private Socket s;
@@ -30,9 +32,14 @@ System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+ms
 			switch(msj.getTipo()) {
 			case CONEXION:
 				String ip = ((Msj_Information) msj).getContent(0);
-				datos.guardar_usuario(msj.getOrigen(),ip,fout);
-				send = new Msj_Information(Msj.CONFIRMACION_CONEXION,Servidor.origen,msj.getOrigen());
-				fout.writeObject(send); fout.flush();
+				boolean session = datos.guardar_usuario(msj.getOrigen(),ip,fout);
+				if(session) {
+					send = new Msj_Information(Msj.CONFIRMACION_CONEXION,Servidor.origen,msj.getOrigen());
+					fout.writeObject(send); fout.flush();
+				}
+				else {
+					send_error(msj.getOrigen(),fout,"Ya tiene una sesión abierta.",2);
+				}
 				break;
 			case LISTA_USARIOS:
 				String lista = datos.usuarios_sistema();
@@ -49,11 +56,11 @@ System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+ms
 					fout.writeObject(send); fout.flush();
 				}
 				else {					
-					send_error(msj.getOrigen(),fout,"No se pudo añadir el fichero "+f_add,true);
+					send_error(msj.getOrigen(),fout,"No se pudo añadir el fichero "+f_add,0);
 				}
 				break;
 			case ELIMINAR_ALGUN_FICHERO:
-				ArrayList<String> mis_ficheros = datos.ficheros_usuario(msj.getOrigen());
+				List<String> mis_ficheros = datos.ficheros_usuario(msj.getOrigen());
 				send = new Msj_Information(Msj.CONFIRMACION_ELIMINAR_ALGUN_FICHERO,Servidor.origen,msj.getOrigen());
 				send.setContent(mis_ficheros);
 				fout.writeObject(send); fout.flush();
@@ -67,7 +74,7 @@ System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+ms
 					fout.writeObject(send); fout.flush();
 				}
 				else {
-					send_error(msj.getOrigen(),fout,"No se pudo eliminar el fichero "+f_del,true);
+					send_error(msj.getOrigen(),fout,"No se pudo eliminar el fichero "+f_del,0);
 				}
 				break;
 			case PEDIR_FICHERO:
@@ -81,7 +88,7 @@ System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+ms
 					fout2.writeObject(send); fout2.flush();
 				}
 				else {	
-					send_error(msj.getOrigen(),fout,"No hay usuarios conectados con ese fichero "+fichero,false);
+					send_error(msj.getOrigen(),fout,"No hay usuarios conectados con ese fichero "+fichero,1);
 				}
 					break;
 			case PREPARADO_CLIENTESERVIDOR:
@@ -92,7 +99,7 @@ System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+ms
 				send = new Msj_Information(Msj.PREPARADO_SERVIDORCLIENTE,Servidor.origen,receptor);
 				send.putContent(fich);
 				send.putContent(ip_emisor);
-				send.setEntero1(puerto_emisor);
+				send.setEntero(puerto_emisor);
 				ObjectOutputStream fout1 = datos.buscar_output(receptor);
 				fout1.writeObject(send); fout1.flush();
 				break;
@@ -105,7 +112,7 @@ System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+ms
 					return;
 				}
 				else {
-					send_error(msj.getOrigen(),fout,"Error al eliminar usuario.",false);
+					send_error(msj.getOrigen(),fout,"Error al eliminar usuario.",1);
 				}
 			default:
 				break;
@@ -115,10 +122,10 @@ System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+ms
 			e.printStackTrace();
 		}
 	}
-	private void send_error(String destino, ObjectOutputStream fout, String error, boolean b) throws IOException {
+	private void send_error(String destino, ObjectOutputStream fout, String error, int b) throws IOException {
 		Msj_Information send = new Msj_Information(Msj.ERROR,Servidor.origen,destino);
 		send.putContent(error);
-		send.setEntero1(b?1:0); // sin EM o con EM
+		send.setEntero(b); // sin EM o con EM
 		fout.writeObject(send); fout.flush();
 	}
 }
