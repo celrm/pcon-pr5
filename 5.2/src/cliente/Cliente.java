@@ -8,7 +8,6 @@ import java.util.concurrent.Semaphore;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import ambos.Mensaje;
 import ambos.Msj;
 import ambos.Msj_Information;
 import servidor.Servidor;
@@ -18,7 +17,7 @@ public class Cliente {
 	private static String ip;
 	private static ObjectOutputStream foutc = null;
 	final static JPanel parent = new JPanel();
-	volatile static Semaphore sesion = new Semaphore(0);
+	volatile static Semaphore flow = new Semaphore(0); // al principio tengo la atención
 
 	public static void main(String[] args) throws Exception {
 		ip = Inet4Address.getLocalHost().getHostAddress();
@@ -28,7 +27,8 @@ public class Cliente {
 		foutc = new ObjectOutputStream(s.getOutputStream());
 		(new OyenteServidor(s,foutc)).start();
 		
-		Mensaje n = new Msj_Information(Msj.CONEXION,usuario,Servidor.origen);
+		Msj_Information n = new Msj_Information(Msj.CONEXION,usuario,Servidor.origen); // al recibir la confirmación de conexión se hace el release 
+		n.putContent(ip);
 		foutc.writeObject(n); foutc.flush();
 		
 		opciones();
@@ -38,17 +38,17 @@ public class Cliente {
 		usuario = JOptionPane.showInputDialog(parent,"Introduzca usuario");
 		boolean error = true;
 		if(usuario == null) {
-			error("Error de usuario","No has iniciado sesión");
+			error("No has iniciado sesión");
 		}
 		else if(usuario.equals(Servidor.origen)) {
-			error("Error de usuario","Usuario protegido");
-		} // TODO más errores: comprobar si está en la lista de usuarios
+			error("Usuario protegido");
+		}
 		else error = false;
 		if(error) input_usuario();
 	}
 
 	private static void opciones() throws Exception {
-		sesion.acquire();
+		flow.acquire();
 		Msj_Information send;
 		int opcion = menu_opcion();
 		switch(opcion) {
@@ -57,7 +57,8 @@ public class Cliente {
 			foutc.writeObject(send); foutc.flush();
 			break;
 		case 1:
-			String fichero = JOptionPane.showInputDialog(parent,"Introduzca fichero");
+			String fichero = JOptionPane.showInputDialog(parent,
+					"Introduzca fichero",usuario);
 			if(fichero != null) {
 				send = new Msj_Information(Msj.PEDIR_FICHERO,usuario,Servidor.origen);
 				send.putContent(fichero);
@@ -65,6 +66,11 @@ public class Cliente {
 			}
 			break;
 		case 2:
+			send = new Msj_Information(Msj.MODIFICAR_FICHEROS,usuario,Servidor.origen);
+//			foutc.writeObject(send); foutc.flush(); // TODO debug
+			flow.release();
+			break;
+		case 3:
 			send = new Msj_Information(Msj.CERRAR_CONEXION,usuario,Servidor.origen);
 			foutc.writeObject(send); foutc.flush();
 			return;
@@ -76,10 +82,11 @@ public class Cliente {
 		Object[] options = 
 			{"Lista de usuarios",
 	        "Pedir fichero", 
+			"Modificar mis ficheros",
 	        "Salir"};
 		int number = JOptionPane.showOptionDialog(
-				parent, "Estas son las opciones disponibles:",
-				"Introduzca acción", JOptionPane.YES_NO_OPTION,
+				parent, "Introduzca acción",
+				usuario, JOptionPane.YES_NO_OPTION,
 				JOptionPane.QUESTION_MESSAGE, null,
 				options, options[1]);
 		return number;
@@ -92,8 +99,17 @@ public class Cliente {
 	public static String usuario() {
 		return usuario;
 	}
-	public static void error(String title,String content) {
+	public static void error(String content) {
 		JOptionPane.showMessageDialog(new JPanel(), content, 
-				title, JOptionPane.ERROR_MESSAGE);
+				usuario, JOptionPane.ERROR_MESSAGE);
+	}
+	public static void error_lock(String content) {
+		try {
+			Cliente.flow.acquire(); // esto es bastante horrible
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+		error(content);
+		Cliente.flow.release();
 	}
 }

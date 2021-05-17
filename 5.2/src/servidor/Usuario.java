@@ -13,56 +13,55 @@ public class Usuario {
 	
 	public Usuario(int number, String id, String ip, ArrayList<String> archivos) {
 		this.setNumber(number);
-		this.setId(id);
+		this.id = id;
 		this.setIp(ip);
-		this.setArchivos(archivos);
+		if(archivos != null)
+			this.archivos = archivos;
+		else
+			this.archivos = new ArrayList<>();
 	}
 
-	public String getId() {
+	String getId() {
 		return id;
 	}
 
-	private void setId(String id) {
-		this.id = id;
-	}
-
-	public ArrayList<String> getArchivos() {
+	ArrayList<String> getArchivos() {
 		return archivos;
 	}
-
-	private void setArchivos(ArrayList<String> archivos) {
-		this.archivos = archivos;
+	
+	void addArchivo(String archivo) {
+		this.archivos.add(archivo);
 	}
 
-	public String getIp() {
+	String getIp() {
 		return ip;
 	}
 
-	private void setIp(String ip) {
+	void setIp(String ip) {
 		this.ip = ip;
 	}
 
-	public ObjectOutputStream getOutput() {
+	ObjectOutputStream getOutput() {
 		return fout;
 	}
 
-	public void setOutput(ObjectOutputStream fout) {
+	void setOutput(ObjectOutputStream fout) {
 		this.fout = fout;
 	}
 
-	public int getNumber() {
+	int getNumber() {
 		return number;
 	}
 
-	public void setNumber(int number) {
+	void setNumber(int number) {
 		this.number = number;
 	}
 
-	public boolean isConnected() {
+	boolean isConnected() {
 		return connected;
 	}
 
-	public void setConnected(boolean connected) {
+	void setConnected(boolean connected) {
 		this.connected = connected;
 	}
 }

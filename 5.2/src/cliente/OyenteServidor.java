@@ -38,12 +38,13 @@ public class OyenteServidor extends Thread {
 			switch(msj.getTipo()) {
 			case CONFIRMACION_CONEXION:
 				System.out.println("Conexión establecida."); System.out.flush();
-				Cliente.sesion.release();
+				Cliente.flow.release();
 				break;
 			case CONFIRMACION_LISTA_USUARIOS:
 				String lista = ((Msj_Information) msj).getContent(0);
-				JOptionPane.showMessageDialog(new JPanel(), lista, "Lista de usuarios", JOptionPane.PLAIN_MESSAGE);
-				Cliente.sesion.release();
+				JOptionPane.showMessageDialog(new JPanel(), "Lista de usuarios:\n\nn"+lista, 
+						origen, JOptionPane.PLAIN_MESSAGE);
+				Cliente.flow.release();
 				break;
 			case EMITIR_FICHERO:
 				String receptor = ((Msj_Information) msj).getContent(0);
@@ -64,17 +65,20 @@ public class OyenteServidor extends Thread {
 				String ip_em = ((Msj_Information) msj).getContent(1);
 				int p_em = ((Msj_Information) msj).getEntero1();
 				(new Receptor(origen,ip_em,p_em,fich)).start();
-				Cliente.sesion.release();
+
+				JOptionPane.showMessageDialog(Cliente.parent, "El fichero "+fich+" se descargará en el fondo.",
+						origen, JOptionPane.OK_OPTION);
+				Cliente.flow.release();
 				break;
 			case CONFIRMACION_CERRAR_CONEXION:
 				JOptionPane.showMessageDialog(Cliente.parent, "¡Adiós!",
-						"Despedida", JOptionPane.CLOSED_OPTION);
-				Cliente.sesion.release();
+						origen, JOptionPane.WARNING_MESSAGE);
+				Cliente.flow.release();
 				return;
 			case ERROR:
-				Cliente.error("Error recibido de "+msj.getOrigen(), 
+				Cliente.error("Error recibido de "+msj.getOrigen()+":\n"+
 						((Msj_Information) msj).getContent(0));
-				Cliente.sesion.release();
+				Cliente.flow.release();
 			default:
 				break;
 			}

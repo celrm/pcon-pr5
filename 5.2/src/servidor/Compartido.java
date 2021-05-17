@@ -42,8 +42,13 @@ public class Compartido {
 		return lista;
 	}
 
-	void guardar_usuario(String usuario, ObjectOutputStream fout) {
+	void guardar_usuario(String usuario, String ip, ObjectOutputStream fout) {
 		Usuario u = usuarios.get(usuario);
+		if(u == null) {
+			u = new Usuario(usuarios.size(), usuario, ip, null);
+			usuarios.put(usuario, u);
+		}
+		u.setIp(ip);
 		u.setOutput(fout);
 		u.setConnected(true);
 	}

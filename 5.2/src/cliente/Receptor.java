@@ -7,8 +7,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
 
-import javax.swing.JOptionPane;
-
 import ambos.*;
 
 public class Receptor extends Thread {
@@ -34,13 +32,7 @@ public class Receptor extends Thread {
 			receive(m);
 			s.close();
 		} catch (IOException | ClassNotFoundException | InterruptedException e) {
-			try {
-				Cliente.sesion.acquire();
-			} catch (InterruptedException e1) {
-				e1.printStackTrace();
-			}
-			Cliente.error("Error de recepción","El fichero "+fichero+" no ha podido ser recibido.");
-			Cliente.sesion.release();
+			Cliente.error_lock("El fichero "+fichero+" no ha podido ser recibido.");
 			e.printStackTrace();
 		}
 	}
@@ -50,19 +42,15 @@ public class Receptor extends Thread {
 		
 		File f = new File(ruta);
 		if (!f.createNewFile()) {
-			Cliente.sesion.acquire();
-			Cliente.error("Error de sobreescritura","El fichero "+m.getName()+ " ya existe.");
-			Cliente.sesion.release();
+			Cliente.error_lock("El fichero "+m.getName()+ " ya existe.");
 		}
         else {
 			String content = m.getContent();
 		    BufferedWriter bw = new BufferedWriter(new FileWriter(f, true));
 		    bw.write(content);
 		    bw.close();
-			Cliente.sesion.acquire();
-			JOptionPane.showMessageDialog(null, content,
-					m.getName(), JOptionPane.PLAIN_MESSAGE);
-			Cliente.sesion.release();
+			System.out.println("Llegó el fichero " +m.getName());
+			System.out.println(content);
 		    // plantear modificar usuarios
         }
 	}

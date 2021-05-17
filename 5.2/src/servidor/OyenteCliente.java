@@ -27,7 +27,8 @@ System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+ms
 			Msj_Information send;
 			switch(msj.getTipo()) {
 			case CONEXION:
-				datos.guardar_usuario(msj.getOrigen(),fout);
+				String ip = ((Msj_Information) msj).getContent(0);
+				datos.guardar_usuario(msj.getOrigen(),ip,fout);
 				send = new Msj_Information(Msj.CONFIRMACION_CONEXION,Servidor.origen,msj.getOrigen());
 				fout.writeObject(send);
 				break;
@@ -35,6 +36,11 @@ System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+ms
 				String lista = datos.usuarios_sistema();
 				send = new Msj_Information(Msj.CONFIRMACION_LISTA_USUARIOS,Servidor.origen,msj.getOrigen());
 				send.putContent(lista);
+				fout.writeObject(send);
+				break;
+			case MODIFICAR_FICHEROS:
+				// TODO modificar ficheros
+				send = new Msj_Information(Msj.CONFIRMACION_MODIFICAR_FICHEROS,Servidor.origen,msj.getOrigen());
 				fout.writeObject(send);
 				break;
 			case PEDIR_FICHERO:
