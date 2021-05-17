@@ -19,12 +19,11 @@ public class Compartido {
 	}
 
 	String buscar_usuario(String fichero) {
-		for(Usuario u : usuarios.values()) {			
-			for(String f : u.getArchivos()) {
-				if(f.equals(fichero) && u.isConnected())
-					return u.getId();
-			}
-		}
+		for(Usuario u : usuarios.values())
+			if(u.isConnected())
+				for(String f : u.getArchivos())
+					if(f.equals(fichero))
+						return u.getId();
 		return null;
 	}
 
@@ -51,5 +50,11 @@ public class Compartido {
 		u.setIp(ip);
 		u.setOutput(fout);
 		u.setConnected(true);
+	}
+	public int buscar_num(String origen) {
+		for(Usuario u : usuarios.values())
+			if(u.getId().equals(origen) && u.isConnected())
+				return u.getNumber();
+		return -1;
 	}
 }

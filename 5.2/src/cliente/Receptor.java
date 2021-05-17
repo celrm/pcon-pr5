@@ -20,9 +20,7 @@ public class Receptor extends Thread {
 		receptor = r;
 		fichero=fich;
 	}
-	// TODO dar prioridad a los errores
-	// TODO poner el semáforo en el error
-	// está fuera de la recepción del paso de testigo así que tiene que esperar a que alguien le deje. 
+	
 	public void run() {
 		try {
 			Socket s = new Socket(ip,puerto);
@@ -32,7 +30,7 @@ public class Receptor extends Thread {
 			receive(m);
 			s.close();
 		} catch (IOException | ClassNotFoundException | InterruptedException e) {
-			Cliente.error_lock("El fichero "+fichero+" no ha podido ser recibido.");
+			System.out.println("El fichero "+fichero+" no ha podido ser recibido.");
 			e.printStackTrace();
 		}
 	}
@@ -42,16 +40,15 @@ public class Receptor extends Thread {
 		
 		File f = new File(ruta);
 		if (!f.createNewFile()) {
-			Cliente.error_lock("El fichero "+m.getName()+ " ya existe.");
+			System.out.println("El fichero "+m.getName()+ " ya existe y no debería sobreescribirse.");
 		}
         else {
 			String content = m.getContent();
 		    BufferedWriter bw = new BufferedWriter(new FileWriter(f, true));
 		    bw.write(content);
 		    bw.close();
-			System.out.println("Llegó el fichero " +m.getName());
-			System.out.println(content);
-		    // plantear modificar usuarios
+			System.out.println("Llegó el fichero " +m.getName()+
+					"con contenido:\n"+content);
         }
 	}
 }

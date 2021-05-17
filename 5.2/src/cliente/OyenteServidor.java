@@ -42,18 +42,19 @@ public class OyenteServidor extends Thread {
 				break;
 			case CONFIRMACION_LISTA_USUARIOS:
 				String lista = ((Msj_Information) msj).getContent(0);
-				JOptionPane.showMessageDialog(new JPanel(), "Lista de usuarios:\n\nn"+lista, 
+				JOptionPane.showMessageDialog(new JPanel(), "Lista de usuarios:\n\n"+lista, 
 						origen, JOptionPane.PLAIN_MESSAGE);
 				Cliente.flow.release();
 				break;
 			case EMITIR_FICHERO:
 				String receptor = ((Msj_Information) msj).getContent(0);
 				String fichero = ((Msj_Information) msj).getContent(1);
+				int num_r = ((Msj_Information) msj).getEntero1();
 				Msj_Information send = new Msj_Information(Msj.PREPARADO_CLIENTESERVIDOR,origen,destino);
 				send.putContent(receptor);
 				send.putContent(Cliente.ip());
 				send.putContent(fichero);
-				int puerto = 505; // TODO generar puertos
+				int puerto = Servidor.puerto + num_r; // TODO generar puertos
 				send.setEntero1(puerto);
 				
 				(new Emisor(origen,receptor,puerto,fichero)).start();
@@ -66,12 +67,12 @@ public class OyenteServidor extends Thread {
 				int p_em = ((Msj_Information) msj).getEntero1();
 				(new Receptor(origen,ip_em,p_em,fich)).start();
 
-				JOptionPane.showMessageDialog(Cliente.parent, "El fichero "+fich+" se descargará en el fondo.",
+				JOptionPane.showMessageDialog(null, "El fichero "+fich+" se descargará en el fondo.",
 						origen, JOptionPane.OK_OPTION);
 				Cliente.flow.release();
 				break;
 			case CONFIRMACION_CERRAR_CONEXION:
-				JOptionPane.showMessageDialog(Cliente.parent, "¡Adiós!",
+				JOptionPane.showMessageDialog(null, "¡Adiós!",
 						origen, JOptionPane.WARNING_MESSAGE);
 				Cliente.flow.release();
 				return;

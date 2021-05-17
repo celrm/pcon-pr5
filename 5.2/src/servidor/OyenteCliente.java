@@ -50,6 +50,7 @@ System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+ms
 					send = new Msj_Information(Msj.EMITIR_FICHERO,Servidor.origen,emisor);
 					send.putContent(msj.getOrigen()); // este es el receptor
 					send.putContent(fichero);
+					send.setEntero1(datos.buscar_num(msj.getOrigen()));
 					ObjectOutputStream fout2 = datos.buscar_output(emisor);
 					fout2.writeObject(send);
 				}

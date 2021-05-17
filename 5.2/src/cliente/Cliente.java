@@ -16,7 +16,6 @@ public class Cliente {
 	private static String usuario;
 	private static String ip;
 	private static ObjectOutputStream foutc = null;
-	final static JPanel parent = new JPanel();
 	volatile static Semaphore flow = new Semaphore(0); // al principio tengo la atención
 
 	public static void main(String[] args) throws Exception {
@@ -35,7 +34,7 @@ public class Cliente {
 	}
 
 	private static void input_usuario() {
-		usuario = JOptionPane.showInputDialog(parent,"Introduzca usuario");
+		usuario = JOptionPane.showInputDialog("Introduzca usuario");
 		boolean error = true;
 		if(usuario == null) {
 			error("No has iniciado sesión");
@@ -57,13 +56,14 @@ public class Cliente {
 			foutc.writeObject(send); foutc.flush();
 			break;
 		case 1:
-			String fichero = JOptionPane.showInputDialog(parent,
-					"Introduzca fichero",usuario);
+			String fichero = JOptionPane.showInputDialog(null,
+					"Introduzca fichero",usuario,JOptionPane.QUESTION_MESSAGE);
 			if(fichero != null) {
 				send = new Msj_Information(Msj.PEDIR_FICHERO,usuario,Servidor.origen);
 				send.putContent(fichero);
 				foutc.writeObject(send); foutc.flush();
 			}
+			else flow.release();
 			break;
 		case 2:
 			send = new Msj_Information(Msj.MODIFICAR_FICHEROS,usuario,Servidor.origen);
@@ -85,7 +85,7 @@ public class Cliente {
 			"Modificar mis ficheros",
 	        "Salir"};
 		int number = JOptionPane.showOptionDialog(
-				parent, "Introduzca acción",
+				null, "Introduzca acción",
 				usuario, JOptionPane.YES_NO_OPTION,
 				JOptionPane.QUESTION_MESSAGE, null,
 				options, options[1]);
@@ -102,14 +102,5 @@ public class Cliente {
 	public static void error(String content) {
 		JOptionPane.showMessageDialog(new JPanel(), content, 
 				usuario, JOptionPane.ERROR_MESSAGE);
-	}
-	public static void error_lock(String content) {
-		try {
-			Cliente.flow.acquire(); // esto es bastante horrible
-		} catch (InterruptedException e1) {
-			e1.printStackTrace();
-		}
-		error(content);
-		Cliente.flow.release();
 	}
 }
