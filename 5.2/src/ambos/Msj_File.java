@@ -1,7 +1,7 @@
 package ambos;
 
-@SuppressWarnings("serial")
 public class Msj_File extends Mensaje {
+	private static final long serialVersionUID = 1L;
 
 	private String name;
 	private String content;

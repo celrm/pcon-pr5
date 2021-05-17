@@ -3,8 +3,8 @@ package ambos;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("serial")
 public class Msj_Information extends Mensaje {
+	private static final long serialVersionUID = 1L;
 
 	private List<String> content;
 	private int entero1;

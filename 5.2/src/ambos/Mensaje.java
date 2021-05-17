@@ -2,9 +2,8 @@ package ambos;
 
 import java.io.Serializable;
 
-@SuppressWarnings("serial")
 public abstract class Mensaje implements Serializable {
-
+	private static final long serialVersionUID = 1L;
 	private Msj tipo;
 	private String origen;
 	private String destino;
