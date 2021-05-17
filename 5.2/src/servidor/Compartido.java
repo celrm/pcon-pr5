@@ -12,11 +12,11 @@ public class Compartido {
 	}
 
 	// READ
-	ObjectOutputStream buscar_output(String usuario) {
+	synchronized ObjectOutputStream buscar_output(String usuario) {
 		Usuario u = usuarios.get(usuario);
 		return u.getOutput();
 	}
-	String buscar_usuario(String fichero) {
+	synchronized String buscar_usuario(String fichero) {
 		for(Usuario u : usuarios.values())
 			if(u.isConnected()) // problema
 				for(String f : u.getArchivos())
@@ -24,7 +24,7 @@ public class Compartido {
 						return u.getId();
 		return null;
 	}
-	String usuarios_sistema() {
+	synchronized String usuarios_sistema() {
 		String lista = "";
 		for(Usuario u : usuarios.values()) {
 			if(u.isConnected()) { // problema
@@ -34,17 +34,17 @@ public class Compartido {
 		}
 		return lista;
 	}
-	List<String> ficheros_usuario(String usuario) {
+	synchronized List<String> ficheros_usuario(String usuario) {
 		Usuario u = usuarios.get(usuario);
 		if(u == null) return null;
 		return new ArrayList<>(u.getArchivos());
 	}
 	
 	// WRITE
-	void anadir_usuario(Usuario user) {
+	synchronized void anadir_usuario(Usuario user) {
 		usuarios.put(user.getId(), user);
 	}
-	boolean eliminar_usuario(String usuario) {
+	synchronized boolean eliminar_usuario(String usuario) {
 		Usuario u = usuarios.get(usuario);
 		if(u == null) {
 			return false;
@@ -52,7 +52,7 @@ public class Compartido {
 		u.setConnected(false);
 		return true;
 	}
-	boolean guardar_usuario(String usuario, String ip, ObjectOutputStream fout) {
+	synchronized boolean guardar_usuario(String usuario, String ip, ObjectOutputStream fout) {
 		Usuario u = usuarios.get(usuario);
 		if(u == null) {
 			u = new Usuario(usuarios.size(), usuario, ip, null);
@@ -64,7 +64,7 @@ public class Compartido {
 		u.setConnected(true);
 		return true;
 	}
-	boolean anadir_fichero(String f_add, String usuario) {
+	synchronized boolean anadir_fichero(String f_add, String usuario) {
 		Usuario u = usuarios.get(usuario);
 		if(u == null || u.getArchivos().contains(f_add)) { // problema?
 			return false;
@@ -72,7 +72,7 @@ public class Compartido {
 		u.addArchivo(f_add);
 		return true;
 	}
-	public boolean eliminar_fichero(String f_del, String usuario) {
+	synchronized public boolean eliminar_fichero(String f_del, String usuario) {
 		Usuario u = usuarios.get(usuario);
 		if(u == null) {
 			return false;
