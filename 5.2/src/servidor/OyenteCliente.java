@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 
 import ambos.*;
 
@@ -41,26 +42,33 @@ System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+ms
 				break;
 			case ANADIR_FICHERO:
 				String f_add = ((Msj_Information)msj).getContent(0);
-				boolean bien = datos.anadir_fichero(f_add,msj.getOrigen());
-				if(bien) {
+				boolean anadido = datos.anadir_fichero(f_add,msj.getOrigen());
+				if(anadido) {
 					send = new Msj_Information(Msj.CONFIRMACION_ANADIR_FICHERO,Servidor.origen,msj.getOrigen());
+					send.putContent(f_add);
 					fout.writeObject(send); fout.flush();
 				}
 				else {					
-					send_error(msj.getOrigen(),fout,"No se pudo añadir el fichero "+f_add);
+					send_error(msj.getOrigen(),fout,"No se pudo añadir el fichero "+f_add,true);
 				}
 				break;
 			case ELIMINAR_ALGUN_FICHERO:
-				// TODO modificar ficheros
-				String mis_ficheros = datos.ficheros_usuario(msj.getOrigen());
+				ArrayList<String> mis_ficheros = datos.ficheros_usuario(msj.getOrigen());
 				send = new Msj_Information(Msj.CONFIRMACION_ELIMINAR_ALGUN_FICHERO,Servidor.origen,msj.getOrigen());
-				send.putContent(mis_ficheros);
+				send.setContent(mis_ficheros);
 				fout.writeObject(send); fout.flush();
 				break;
 			case ELIMINAR_ESTE_FICHERO:
-				// TODO modificar ficheros
-				send = new Msj_Information(Msj.CONFIRMACION_ELIMINAR_ESTE_FICHERO,Servidor.origen,msj.getOrigen());
-				fout.writeObject(send); fout.flush();
+				String f_del = ((Msj_Information)msj).getContent(0);
+				boolean eliminado = datos.eliminar_fichero(f_del,msj.getOrigen());
+				if(eliminado) {
+					send = new Msj_Information(Msj.CONFIRMACION_ELIMINAR_ESTE_FICHERO,Servidor.origen,msj.getOrigen());
+					send.putContent(f_del);
+					fout.writeObject(send); fout.flush();
+				}
+				else {
+					send_error(msj.getOrigen(),fout,"No se pudo eliminar el fichero "+f_del,true);
+				}
 				break;
 			case PEDIR_FICHERO:
 				String fichero = ((Msj_Information) msj).getContent(0);			
@@ -73,14 +81,14 @@ System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+ms
 					fout2.writeObject(send); fout2.flush();
 				}
 				else {	
-					send_error(msj.getOrigen(),fout,"No hay usuarios conectados con ese fichero "+fichero);
+					send_error(msj.getOrigen(),fout,"No hay usuarios conectados con ese fichero "+fichero,false);
 				}
 					break;
 			case PREPARADO_CLIENTESERVIDOR:
 				String receptor = ((Msj_Information) msj).getContent(0);
 				String ip_emisor = ((Msj_Information) msj).getContent(1);
 				String fich = ((Msj_Information) msj).getContent(2);
-				int puerto_emisor = ((Msj_Information) msj).getEntero1();
+				int puerto_emisor = ((Msj_Information) msj).getEntero();
 				send = new Msj_Information(Msj.PREPARADO_SERVIDORCLIENTE,Servidor.origen,receptor);
 				send.putContent(fich);
 				send.putContent(ip_emisor);
@@ -97,7 +105,7 @@ System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+ms
 					return;
 				}
 				else {
-					send_error(msj.getOrigen(),fout,"Error al eliminar usuario.");
+					send_error(msj.getOrigen(),fout,"Error al eliminar usuario.",false);
 				}
 			default:
 				break;
@@ -107,9 +115,10 @@ System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+ms
 			e.printStackTrace();
 		}
 	}
-	private void send_error(String destino, ObjectOutputStream fout, String error) throws IOException {
+	private void send_error(String destino, ObjectOutputStream fout, String error, boolean b) throws IOException {
 		Msj_Information send = new Msj_Information(Msj.ERROR,Servidor.origen,destino);
 		send.putContent(error);
+		send.setEntero1(b?1:0); // sin EM o con EM
 		fout.writeObject(send); fout.flush();
 	}
 }

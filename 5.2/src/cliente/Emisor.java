@@ -8,8 +8,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
 
-import javax.swing.JOptionPane;
-
 import ambos.*;
 
 public class Emisor extends Thread {

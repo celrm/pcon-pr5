@@ -33,6 +33,10 @@ public class Usuario {
 		this.archivos.add(archivo);
 	}
 
+	boolean deleteArchivo(String f_del) {
+		return this.archivos.remove(f_del);		
+	}
+
 	String getIp() {
 		return ip;
 	}

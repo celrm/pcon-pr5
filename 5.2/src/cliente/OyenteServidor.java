@@ -5,11 +5,13 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.List;
 
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 
-import ambos.*;
+import ambos.Mensaje;
+import ambos.Msj;
+import ambos.Msj_Information;
 import servidor.Servidor;
 
 public class OyenteServidor extends Thread {
@@ -39,26 +41,33 @@ public class OyenteServidor extends Thread {
 			switch(msj.getTipo()) {
 			case CONFIRMACION_CONEXION:
 				System.out.println("Conexión establecida."); System.out.flush();
-				Cliente.flow.release();
+				Cliente.release_flow();
 				break;
 			case CONFIRMACION_LISTA_USUARIOS:
-				String lista = ((Msj_Information) msj).getContent(0);
-				JOptionPane.showMessageDialog(new JPanel(), "Lista de usuarios:\n\n"+lista, 
-						origen, JOptionPane.PLAIN_MESSAGE);
-				Cliente.flow.release();
+				Cliente.info("Lista de usuarios:\n\n"+((Msj_Information) msj).getContent(0));
+				Cliente.release_flow();
 				break;
 			case CONFIRMACION_ANADIR_FICHERO:
-				System.out.println("Fichero añadido."); System.out.flush(); // TODO poner cuál
-				Cliente.flow.release();
+				System.out.println("Fichero "+((Msj_Information) msj).getContent(0)+" añadido."); System.out.flush();
 				break;
 			case CONFIRMACION_ELIMINAR_ALGUN_FICHERO:
-				String mis_ficheros = ((Msj_Information) msj).getContent(0);
-				JOptionPane.showMessageDialog(new JPanel(), "Lista de ficheros:\n\n"+mis_ficheros, 
-						origen, JOptionPane.PLAIN_MESSAGE);
+				List<String> mis_ficheros = ((Msj_Information) msj).getContent();
+				if(mis_ficheros.size() == 0) Cliente.error("No tienes ficheros disponibles.");
+				else {
+				    String f_del = (String) JOptionPane.showInputDialog(
+		                    null, "Elige fichero a eliminar:", origen, JOptionPane.PLAIN_MESSAGE,
+		                    null, mis_ficheros.toArray(new String[0]), mis_ficheros.get(0)); // lista a elegir
+					if(f_del!=null) {
+						Msj_Information send = new Msj_Information(Msj.ELIMINAR_ESTE_FICHERO,origen,destino);
+						send.putContent(f_del);
+						foutc.writeObject(send); foutc.flush();
+						Cliente.info("El fichero "+f_del+" se eliminará en el fondo");
+					}
+				}
+				Cliente.release_flow();
 				break;
 			case CONFIRMACION_ELIMINAR_ESTE_FICHERO:
-				System.out.println("Fichero eliminado."); System.out.flush(); // TODO poner cuál
-				Cliente.flow.release();
+				System.out.println("Fichero "+((Msj_Information) msj).getContent(0)+" eliminado."); System.out.flush();
 				break;
 			case EMITIR_FICHERO:
 				String receptor = ((Msj_Information) msj).getContent(0);
@@ -71,7 +80,6 @@ public class OyenteServidor extends Thread {
 				ServerSocket ss = new ServerSocket(0);
 				int puerto = ss.getLocalPort();
 				send.setEntero1(puerto);
-
 				(new Emisor(origen,receptor,ss,fichero)).start();
 				
 				foutc.writeObject(send); foutc.flush();
@@ -79,22 +87,21 @@ public class OyenteServidor extends Thread {
 			case PREPARADO_SERVIDORCLIENTE:
 				String fich = ((Msj_Information) msj).getContent(0);
 				String ip_em = ((Msj_Information) msj).getContent(1);
-				int p_em = ((Msj_Information) msj).getEntero1();
+				int p_em = ((Msj_Information) msj).getEntero();
 				(new Receptor(origen,ip_em,p_em,fich)).start();
 
-				JOptionPane.showMessageDialog(null, "El fichero "+fich+" se descargará en el fondo.",
-						origen, JOptionPane.OK_OPTION);
-				Cliente.flow.release();
+				Cliente.info("El fichero "+fich+" se recibirá en el fondo.");
+				Cliente.release_flow();
 				break;
 			case CONFIRMACION_CERRAR_CONEXION:
-				JOptionPane.showMessageDialog(null, "¡Adiós!",
-						origen, JOptionPane.WARNING_MESSAGE);
-				Cliente.flow.release();
+				Cliente.info("¡Adiós!");
+				Cliente.release_flow();
 				return;
 			case ERROR:
 				Cliente.error("Error recibido de "+msj.getOrigen()+":\n"+
 						((Msj_Information) msj).getContent(0));
-				Cliente.flow.release();
+				if(((Msj_Information) msj).getEntero()>0)
+					Cliente.release_flow();
 			default:
 				break;
 			}

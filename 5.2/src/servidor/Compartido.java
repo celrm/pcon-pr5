@@ -1,6 +1,7 @@
 package servidor;
 
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Compartido {
@@ -46,10 +47,10 @@ public class Compartido {
 		}
 		return lista;
 	}
-	String ficheros_usuario(String usuario) {
+	ArrayList<String> ficheros_usuario(String usuario) {
 		Usuario u = usuarios.get(usuario);
 		if(u == null) return null;
-		return u.getArchivos().toString(); // TODO poner bonito
+		return u.getArchivos();//.toString(); // TODO poner bonito
 	}
 
 	void guardar_usuario(String usuario, String ip, ObjectOutputStream fout) {
@@ -75,5 +76,12 @@ public class Compartido {
 		}
 		u.addArchivo(f_add);
 		return true;
+	}
+	public boolean eliminar_fichero(String f_del, String usuario) {
+		Usuario u = usuarios.get(usuario);
+		if(u == null) {
+			return false;
+		}
+		return u.deleteArchivo(f_del);
 	}
 }

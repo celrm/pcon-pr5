@@ -48,7 +48,7 @@ public class Receptor extends Thread {
 		    bw.write(content);
 		    bw.close();
 			System.out.println("Llegó el fichero " +m.getName()+
-					"con contenido:\n"+content);
+					" con contenido:\n"+content);
         }
 	}
 }

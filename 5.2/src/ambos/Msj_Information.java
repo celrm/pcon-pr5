@@ -18,16 +18,24 @@ public class Msj_Information extends Mensaje {
 		return content.get(i);
 	}
 
+	public List<String> getContent() {
+		return content;
+	}
+
 	public void putContent(String s) {
 		content.add(s);
 	}
 
-	public int getEntero1() {
+	public int getEntero() {
 		return entero1;
 	}
 
 	public void setEntero1(int entero1) {
 		this.entero1 = entero1;
+	}
+
+	public void setContent(ArrayList<String> archivos) {
+		content = archivos;
 	}
 
 }
