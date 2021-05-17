@@ -3,6 +3,7 @@ package cliente;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
 import java.net.Socket;
 
 import javax.swing.JOptionPane;
@@ -34,7 +35,7 @@ public class OyenteServidor extends Thread {
 			msj = (Mensaje) finc.readObject();
 			System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+msj.getDestino()); 
 			System.out.flush();			
-			if(!msj.getDestino().equals(origen)) continue; // está pocho
+			if(!msj.getDestino().equals(origen)) continue;
 			switch(msj.getTipo()) {
 			case CONFIRMACION_CONEXION:
 				System.out.println("Conexión establecida."); System.out.flush();
@@ -46,18 +47,32 @@ public class OyenteServidor extends Thread {
 						origen, JOptionPane.PLAIN_MESSAGE);
 				Cliente.flow.release();
 				break;
+			case CONFIRMACION_ANADIR_FICHERO:
+				System.out.println("Fichero añadido."); System.out.flush(); // TODO poner cuál
+				Cliente.flow.release();
+				break;
+			case CONFIRMACION_ELIMINAR_ALGUN_FICHERO:
+				String mis_ficheros = ((Msj_Information) msj).getContent(0);
+				JOptionPane.showMessageDialog(new JPanel(), "Lista de ficheros:\n\n"+mis_ficheros, 
+						origen, JOptionPane.PLAIN_MESSAGE);
+				break;
+			case CONFIRMACION_ELIMINAR_ESTE_FICHERO:
+				System.out.println("Fichero eliminado."); System.out.flush(); // TODO poner cuál
+				Cliente.flow.release();
+				break;
 			case EMITIR_FICHERO:
 				String receptor = ((Msj_Information) msj).getContent(0);
 				String fichero = ((Msj_Information) msj).getContent(1);
-				int num_r = ((Msj_Information) msj).getEntero1();
 				Msj_Information send = new Msj_Information(Msj.PREPARADO_CLIENTESERVIDOR,origen,destino);
 				send.putContent(receptor);
 				send.putContent(Cliente.ip());
 				send.putContent(fichero);
-				int puerto = Servidor.puerto + num_r; // TODO generar puertos
+
+				ServerSocket ss = new ServerSocket(0);
+				int puerto = ss.getLocalPort();
 				send.setEntero1(puerto);
-				
-				(new Emisor(origen,receptor,puerto,fichero)).start();
+
+				(new Emisor(origen,receptor,ss,fichero)).start();
 				
 				foutc.writeObject(send); foutc.flush();
 				break;

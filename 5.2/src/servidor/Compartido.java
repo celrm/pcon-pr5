@@ -27,18 +27,29 @@ public class Compartido {
 		return null;
 	}
 
-	void eliminar_usuario(String usuario) {
+	boolean eliminar_usuario(String usuario) {
 		Usuario u = usuarios.get(usuario);
+		if(u == null) {
+			return false;
+		}
 		u.setConnected(false);
+		return true;
 	}
 
 	String usuarios_sistema() {
 		String lista = "";
 		for(Usuario u : usuarios.values()) {
-			lista = lista.concat(u.getId()).concat(": ");
-			lista = lista.concat(u.getArchivos().toString()).concat("\n");
+			if(u.isConnected()) {
+				lista = lista.concat(u.getId()).concat(": ");
+				lista = lista.concat(u.getArchivos().toString()).concat("\n");
+			}
 		}
 		return lista;
+	}
+	String ficheros_usuario(String usuario) {
+		Usuario u = usuarios.get(usuario);
+		if(u == null) return null;
+		return u.getArchivos().toString(); // TODO poner bonito
 	}
 
 	void guardar_usuario(String usuario, String ip, ObjectOutputStream fout) {
@@ -51,10 +62,18 @@ public class Compartido {
 		u.setOutput(fout);
 		u.setConnected(true);
 	}
-	public int buscar_num(String origen) {
-		for(Usuario u : usuarios.values())
-			if(u.getId().equals(origen) && u.isConnected())
-				return u.getNumber();
-		return -1;
+//	int buscar_num(String origen) {
+//		for(Usuario u : usuarios.values())
+//			if(u.getId().equals(origen) && u.isConnected())
+//				return u.getNumber();
+//		return -1;
+//	}
+	boolean anadir_fichero(String f_add, String usuario) {
+		Usuario u = usuarios.get(usuario);
+		if(u == null) {
+			return false;
+		}
+		u.addArchivo(f_add);
+		return true;
 	}
 }

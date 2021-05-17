@@ -1,5 +1,6 @@
 package cliente;
 
+import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Inet4Address;
 import java.net.Socket;
@@ -16,7 +17,7 @@ public class Cliente {
 	private static String usuario;
 	private static String ip;
 	private static ObjectOutputStream foutc = null;
-	volatile static Semaphore flow = new Semaphore(0); // al principio tengo la atención
+	volatile static Semaphore flow = new Semaphore(0); // es un poco tonto, solo para esperar respuesta de OS
 
 	public static void main(String[] args) throws Exception {
 		ip = Inet4Address.getLocalHost().getHostAddress();
@@ -26,7 +27,7 @@ public class Cliente {
 		foutc = new ObjectOutputStream(s.getOutputStream());
 		(new OyenteServidor(s,foutc)).start();
 		
-		Msj_Information n = new Msj_Information(Msj.CONEXION,usuario,Servidor.origen); // al recibir la confirmación de conexión se hace el release 
+		Msj_Information n = new Msj_Information(Msj.CONEXION,usuario,Servidor.origen);
 		n.putContent(ip);
 		foutc.writeObject(n); foutc.flush();
 		
@@ -66,9 +67,7 @@ public class Cliente {
 			else flow.release();
 			break;
 		case 2:
-			send = new Msj_Information(Msj.MODIFICAR_FICHEROS,usuario,Servidor.origen);
-//			foutc.writeObject(send); foutc.flush(); // TODO debug
-			flow.release();
+			menu_modificar();
 			break;
 		case 3:
 			send = new Msj_Information(Msj.CERRAR_CONEXION,usuario,Servidor.origen);
@@ -90,6 +89,36 @@ public class Cliente {
 				JOptionPane.QUESTION_MESSAGE, null,
 				options, options[1]);
 		return number;
+	}
+	private static void menu_modificar() throws IOException {
+		Object[] options = 
+			{"Añadir fichero",
+	        "Quitar fichero",
+	        "Cancelar"};
+		int number = JOptionPane.showOptionDialog(
+				null, "Introduzca acción",
+				usuario, JOptionPane.YES_NO_OPTION,
+				JOptionPane.QUESTION_MESSAGE, null,
+				options, options[1]);
+		Msj_Information send;
+		switch(number) {
+		case 0:		
+			String fichero = JOptionPane.showInputDialog(null,
+				"Introduzca fichero a añadir",usuario,JOptionPane.QUESTION_MESSAGE);
+			if(fichero != null) {
+				send = new Msj_Information(Msj.ANADIR_FICHERO,usuario,Servidor.origen);
+				send.putContent(fichero);
+				foutc.writeObject(send); foutc.flush();
+			}
+			else flow.release();
+			break;
+		case 1:
+			send = new Msj_Information(Msj.ELIMINAR_ALGUN_FICHERO,usuario,Servidor.origen);
+			foutc.writeObject(send); foutc.flush();
+		case 2: 
+			flow.release(); 
+			break;
+		}
 	}
 
 	public static String ip() {

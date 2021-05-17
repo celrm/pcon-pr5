@@ -8,7 +8,7 @@ public class Usuario {
 	private String id;
 	private String ip;
 	private ArrayList<String> archivos;
-	private ObjectOutputStream fout; // to connect with servidor
+	private ObjectOutputStream fout;
 	private boolean connected = false;
 	
 	public Usuario(int number, String id, String ip, ArrayList<String> archivos) {

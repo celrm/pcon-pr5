@@ -15,17 +15,16 @@ import ambos.*;
 public class Emisor extends Thread {
 	private String emisor;
 	private String receptor;
-	private int puerto;
+	private ServerSocket ss;
 	private String fichero;
-	public Emisor(String e, String r, int puerto,String fichero) {
+	public Emisor(String e, String r, ServerSocket ss,String fichero) {
 		emisor=e;
 		receptor=r;
-		this.puerto=puerto;
-		this.fichero = fichero; // pregunta: dónde se crea el serversocket
+		this.ss=ss;
+		this.fichero = fichero;
 	}
 	public void run() {
 		try {
-			ServerSocket ss = new ServerSocket(puerto);
 			Socket s = ss.accept();
 			ObjectOutputStream fout = new ObjectOutputStream(s.getOutputStream());
 
@@ -33,8 +32,7 @@ public class Emisor extends Thread {
 			fout.writeObject(send);
 			ss.close();
 		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null, "El fichero "+fichero+ " no ha podido enviarse a "+receptor+".",
-					"Error de envío", JOptionPane.ERROR_MESSAGE);
+			System.out.println("El fichero "+fichero+ " no ha podido enviarse a "+receptor+" por:\n"+  e.getMessage()); System.out.flush();
 			e.printStackTrace();
 		}
 	}
