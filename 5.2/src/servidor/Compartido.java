@@ -30,9 +30,15 @@ public class Compartido {
 	}
 
 	// READ
-	ObjectOutputStream buscar_output(String usuario) throws Exception {
+	ObjectOutputStream buscar_output(String usuario) {
 		l.lock();
-		while(nwriters > 0) condr.await();
+		while(nwriters > 0)
+			try {
+				condr.await();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		++ nreaders;
 		Usuario u = usuarios.get(usuario);
 		--nreaders;
@@ -40,10 +46,16 @@ public class Compartido {
 		l.unlock();
 		return u.getOutput();
 	}
-	 String buscar_usuario(String fichero) throws Exception {
+	 String buscar_usuario(String fichero)  {
 		String ret = null;
 		l.lock();
-		while(nwriters > 0) condr.await();
+		while(nwriters > 0)
+			try {
+				condr.await();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		++nreaders;
 		for(Usuario u : usuarios.values())
 			if(u.isConnected()) // problema
@@ -55,10 +67,16 @@ public class Compartido {
 		l.unlock();
 		return ret;
 	}
-	 String usuarios_sistema() throws Exception {
+	 String usuarios_sistema() {
 		String lista = "";
 		l.lock();
-		while(nwriters > 0) condr.await();
+		while(nwriters > 0)
+			try {
+				condr.await();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		++nreaders;
 		for(Usuario u : usuarios.values()) {
 			if(u.isConnected()) { // problema
@@ -71,10 +89,16 @@ public class Compartido {
 		l.unlock();
 		return lista;
 	}
-	 List<String> ficheros_usuario(String usuario) throws Exception {
+	 List<String> ficheros_usuario(String usuario) {
 		ArrayList<String> ret;
 		l.lock();
-		while(nwriters > 0) condr.await();
+		while(nwriters > 0)
+			try {
+				condr.await();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		++nreaders;
 		Usuario u = usuarios.get(usuario);
 		if(u == null) ret =  null;
@@ -86,9 +110,15 @@ public class Compartido {
 	}
 	
 	// WRITE
-	void anadir_usuario(Usuario user) throws Exception {
+	void anadir_usuario(Usuario user) {
 		l.lock();
-		while (nreaders > 0 || nwriters > 0) condw.await();
+		while (nreaders > 0 || nwriters > 0)
+			try {
+				condw.await();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		++ nwriters;
 		usuarios.put(user.getId(), user);
 		--nwriters;
@@ -96,10 +126,16 @@ public class Compartido {
 		condr.signalAll();
 		l.unlock();
 	}
-	 boolean eliminar_usuario(String usuario) throws Exception {
+	 boolean eliminar_usuario(String usuario) {
 		boolean ret;
 		l.lock();
-		while (nreaders > 0 || nwriters > 0) condw.await();
+		while (nreaders > 0 || nwriters > 0)
+			try {
+				condw.await();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		++ nwriters;
 		Usuario u = usuarios.get(usuario);
 		if(u == null) {
@@ -115,10 +151,16 @@ public class Compartido {
 		l.unlock();
 		return ret;
 	}
-	 boolean guardar_usuario(String usuario, String ip, ObjectOutputStream fout) throws Exception {
+	 boolean guardar_usuario(String usuario, String ip, ObjectOutputStream fout)  {
 		boolean ret;
 		l.lock();
-		while (nreaders > 0 || nwriters > 0) condw.await();
+		while (nreaders > 0 || nwriters > 0)
+			try {
+				condw.await();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		++ nwriters;
 		Usuario u = usuarios.get(usuario);
 		if(u == null) {
@@ -141,10 +183,16 @@ public class Compartido {
 		return ret;
 		
 	}
-	 boolean anadir_fichero(String f_add, String usuario) throws Exception {
+	 boolean anadir_fichero(String f_add, String usuario){
 		boolean ret;
 		l.lock();
-		while (nreaders > 0 || nwriters > 0) condw.await();
+		while (nreaders > 0 || nwriters > 0)
+			try {
+				condw.await();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		++ nwriters;
 		Usuario u = usuarios.get(usuario);
 		if(u == null || u.getArchivos().contains(f_add)) { // problema?
@@ -160,10 +208,16 @@ public class Compartido {
 		l.unlock();
 		return ret; 
 	}
-	 public boolean eliminar_fichero(String f_del, String usuario) throws InterruptedException {
+	 public boolean eliminar_fichero(String f_del, String usuario)  {
 		boolean ret;
 		l.lock();
-		while (nreaders > 0 || nwriters > 0) condw.await();
+		while (nreaders > 0 || nwriters > 0)
+			try {
+				condw.await();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		++ nwriters;
 		Usuario u = usuarios.get(usuario);
 		if(u == null) {
