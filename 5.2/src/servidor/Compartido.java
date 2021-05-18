@@ -5,78 +5,177 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.Condition;
+
+
 public class Compartido {
 	private HashMap<String,Usuario> usuarios;
+	
+	//Problema de readers-writers usando las tecnicas de la practica 4: monitores
+	
+	private int nreaders;
+	private int nwriters;
+	private final ReentrantLock l;
+	private final Condition condr;
+	private final Condition condw;
+	
 	public Compartido() {
 		usuarios = new HashMap<String,Usuario> ();
+		nreaders = 0;
+		nwriters = 0;
+		l = new ReentrantLock(true);
+		condr = l.newCondition();
+		condw = l.newCondition();
 	}
 
 	// READ
-	synchronized ObjectOutputStream buscar_output(String usuario) {
+	ObjectOutputStream buscar_output(String usuario) throws Exception {
+		l.lock();
+		while(nwriters > 0) condr.await();
+		++ nreaders;
 		Usuario u = usuarios.get(usuario);
+		--nreaders;
+		if (nreaders == 0) condw.signal();
+		l.unlock();
 		return u.getOutput();
 	}
-	synchronized String buscar_usuario(String fichero) {
+	 String buscar_usuario(String fichero) throws Exception {
+		String ret = null;
+		l.lock();
+		while(nwriters > 0) condr.await();
+		++nreaders;
 		for(Usuario u : usuarios.values())
 			if(u.isConnected()) // problema
 				for(String f : u.getArchivos())
 					if(f.equals(fichero))
-						return u.getId();
-		return null;
+						ret =  u.getId();
+		--nreaders;
+		if (nreaders == 0) condw.signal();
+		l.unlock();
+		return ret;
 	}
-	synchronized String usuarios_sistema() {
+	 String usuarios_sistema() throws Exception {
 		String lista = "";
+		l.lock();
+		while(nwriters > 0) condr.await();
+		++nreaders;
 		for(Usuario u : usuarios.values()) {
 			if(u.isConnected()) { // problema
 				lista = lista.concat(u.getId()).concat(": ");
 				lista = lista.concat(u.getArchivos().toString()).concat("\n");
 			}
 		}
+		--nreaders;
+		if (nreaders == 0) condw.signal();
+		l.unlock();
 		return lista;
 	}
-	synchronized List<String> ficheros_usuario(String usuario) {
+	 List<String> ficheros_usuario(String usuario) throws Exception {
+		ArrayList<String> ret;
+		l.lock();
+		while(nwriters > 0) condr.await();
+		++nreaders;
 		Usuario u = usuarios.get(usuario);
-		if(u == null) return null;
-		return new ArrayList<>(u.getArchivos());
+		if(u == null) ret =  null;
+		else ret = new ArrayList<>(u.getArchivos());
+		--nreaders;
+		if (nreaders == 0) condw.signal();
+		l.unlock();
+		return ret;
 	}
 	
 	// WRITE
-	synchronized void anadir_usuario(Usuario user) {
+	void anadir_usuario(Usuario user) throws Exception {
+		l.lock();
+		while (nreaders > 0 || nwriters > 0) condw.await();
+		++ nwriters;
 		usuarios.put(user.getId(), user);
+		--nwriters;
+		condw.signal();
+		condr.signalAll();
+		l.unlock();
 	}
-	synchronized boolean eliminar_usuario(String usuario) {
+	 boolean eliminar_usuario(String usuario) throws Exception {
+		boolean ret;
+		l.lock();
+		while (nreaders > 0 || nwriters > 0) condw.await();
+		++ nwriters;
 		Usuario u = usuarios.get(usuario);
 		if(u == null) {
-			return false;
+			ret= false;
 		}
-		u.setConnected(false);
-		return true;
+		else {
+			u.setConnected(false);
+			ret= true;
+		}
+		--nwriters;
+		condw.signal();
+		condr.signalAll();
+		l.unlock();
+		return ret;
 	}
-	synchronized boolean guardar_usuario(String usuario, String ip, ObjectOutputStream fout) {
+	 boolean guardar_usuario(String usuario, String ip, ObjectOutputStream fout) throws Exception {
+		boolean ret;
+		l.lock();
+		while (nreaders > 0 || nwriters > 0) condw.await();
+		++ nwriters;
 		Usuario u = usuarios.get(usuario);
 		if(u == null) {
 			u = new Usuario(usuarios.size(), usuario, ip, null);
 			usuarios.put(usuario, u);
 		}
-		if(u.isConnected()) return false;
+		if(u.isConnected()) {
+			ret=  false;
+		}
+		else {
 		u.setIp(ip);
 		u.setOutput(fout);
 		u.setConnected(true);
-		return true;
+		ret =true;
+		}
+		--nwriters;
+		condw.signal();
+		condr.signalAll();
+		l.unlock();
+		return ret;
+		
 	}
-	synchronized boolean anadir_fichero(String f_add, String usuario) {
+	 boolean anadir_fichero(String f_add, String usuario) throws Exception {
+		boolean ret;
+		l.lock();
+		while (nreaders > 0 || nwriters > 0) condw.await();
+		++ nwriters;
 		Usuario u = usuarios.get(usuario);
 		if(u == null || u.getArchivos().contains(f_add)) { // problema?
-			return false;
+			ret = false;
 		}
-		u.addArchivo(f_add);
-		return true;
+		else {
+			u.addArchivo(f_add);
+			ret = true;
+		}
+		--nwriters;
+		condw.signal();
+		condr.signalAll();
+		l.unlock();
+		return ret; 
 	}
-	synchronized public boolean eliminar_fichero(String f_del, String usuario) {
+	 public boolean eliminar_fichero(String f_del, String usuario) throws InterruptedException {
+		boolean ret;
+		l.lock();
+		while (nreaders > 0 || nwriters > 0) condw.await();
+		++ nwriters;
 		Usuario u = usuarios.get(usuario);
 		if(u == null) {
-			return false;
+			ret =  false;
 		}
-		return u.deleteArchivo(f_del);
+		else {
+			ret = u.deleteArchivo(f_del);
+		}
+		--nwriters;
+		condw.signal();
+		condr.signalAll();
+		l.unlock();
+		return ret; 
 	}
 }
