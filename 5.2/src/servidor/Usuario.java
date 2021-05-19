@@ -24,27 +24,27 @@ public class Usuario {
 			this.archivos = new ArrayList<>();
 	}
 
-	synchronized String getId() { return id; }
+	String getId() { return id; }
 
-	synchronized Collection<String> getArchivos() { return Collections.unmodifiableCollection(archivos); }
+	Collection<String> getArchivos() { return Collections.unmodifiableCollection(archivos); }
 	
-	synchronized void addArchivo(String archivo) { this.archivos.add(archivo); }
+	void addArchivo(String archivo) { this.archivos.add(archivo); }
 
-	synchronized boolean deleteArchivo(String f_del) { return this.archivos.remove(f_del); }
+	boolean deleteArchivo(String f_del) { return this.archivos.remove(f_del); }
 
-	synchronized String getIp() { return ip; }
+	String getIp() { return ip; }
 
-	synchronized void setIp(String ip) { this.ip = ip; }
+	void setIp(String ip) { this.ip = ip; }
 
-	synchronized ObjectOutputStream getOutput() { return fout; }
+	ObjectOutputStream getOutput() { return fout; }
 
-	synchronized void setOutput(ObjectOutputStream fout) { this.fout = fout; }
+	void setOutput(ObjectOutputStream fout) { this.fout = fout; }
 
-	synchronized int getNumber() { return number; }
+	int getNumber() { return number; }
 
-	synchronized void setNumber(int number) { this.number = number; }
+	void setNumber(int number) { this.number = number; }
 
-	synchronized boolean isConnected() { return connected; }
+	boolean isConnected() { return connected; }
 
-	synchronized void setConnected(boolean connected) { this.connected = connected; }
+	void setConnected(boolean connected) { this.connected = connected; }
 }
