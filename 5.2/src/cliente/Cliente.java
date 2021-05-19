@@ -50,7 +50,7 @@ public class Cliente {
 
 	private static void opciones() throws Exception {
 		while(true) {
-			take_flow(); // wait for itself
+			take_flow(); // Se espera a sí mismo por el paso de testigo
 			Msj_Information send;
 			Object[] opts = {"Lista de usuarios", "Pedir fichero","Modificar mis ficheros","Salir"};
 			switch(menu(opts)) {
@@ -78,14 +78,14 @@ public class Cliente {
 		}	
 	}
 	private static void modificar() throws IOException {
-		Object[] opts = {"Añadir fichero", "Quitar fichero", "Cancelar"};
+		Object[] opts = {"Compartir fichero", "Quitar fichero", "Cancelar"};
 		switch(menu(opts)) {
-		case 0:		
-			String fichero = input("Introduzca fichero a añadir");
+		case 0:
+			String fichero = input("Introduzca fichero a compartir");
 			if(fichero != null) {
 				File f = new File("ficheros/"+usuario+"/"+fichero);
 				if(!f.exists() || !f.isFile())
-					error("No existe ese fichero "+fichero);
+					error("No tienes ese fichero "+fichero);
 				else {
 					Msj_Information send = new Msj_Information(Msj.ANADIR_FICHERO,usuario,Servidor.origen);
 					send.putContent(fichero);
@@ -114,23 +114,24 @@ public class Cliente {
 		return number;
 	}
 
-	public static String ip() {
+	static String ip() {
 		return ip;
 	}
 
-	public static String usuario() {
+	static String usuario() {
 		return usuario;
 	}
-	public static void error(String content) {
+	
+	static void error(String content) {
 		JOptionPane.showMessageDialog(null, content, 
 				usuario, JOptionPane.ERROR_MESSAGE);
 	}
 
-	public static void info(String content) {
+	static void info(String content) {
 		JOptionPane.showMessageDialog(null, content,
 				usuario, JOptionPane.INFORMATION_MESSAGE);
 	}
-	public static String input(String content) {
+	static String input(String content) {
 		return JOptionPane.showInputDialog(null,content,
 				usuario,JOptionPane.QUESTION_MESSAGE);
 	}

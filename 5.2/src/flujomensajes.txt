@@ -1,0 +1,33 @@
+reC_receptor                                      S                                           C_emisor
+
+            >>CONEXION>>
+*release*   <<CONFIRMACION_CONEXION<<
+
+--------------------------------------------------
+Caso 0:     
+            >>LISTA_USARIOS>>
+*release*   <<CONFIRMACION_LISTA_USUARIOS(lista)<<
+
+--------------------------------------------------
+Caso 1:     
+            >>PEDIR_FICHERO(fichero)>>
+                                                        >>EMITIR_FICHERO(receptor,fichero)>>
+                                                        <<PREPARADO_CLIENTESERVIDOR(receptor,ip,puerto)<<
+*release*   <<PREPARADO_SERVIDORCLIENTE(ip,puerto)<<
+
+--------------------------------------------------
+Caso 2:     
+---------
+Caso 2.0:   
+*release*   >>ANADIR_FICHERO(fichero)>>
+            <<CONFIRMACION_ELIMINAR_ALGUN_FICHERO(lista)<<
+             
+---------
+Caso 2.1:   >>ELIMINAR_ALGUN_FICHERO>>
+*release*   <<CONFIRMACION_ELIMINAR_ALGUN_FICHERO(lista)<<
+            >>ELIMINAR_ESTE_FICHERO(fichero)>>
+            <<CONFIRMACION_ELIMINAR_ESTE_FICHERO<<
+
+--------------------------------------------------
+Caso 3:     >>CERRAR_CONEXION>>
+            <<MENSAJE_CONFIRMACION_CERRAR_CONEXION<<

@@ -30,7 +30,7 @@ public class Emisor extends Thread {
 			fout.writeObject(send);
 			ss.close();
 		} catch (IOException e) {
-			System.out.println("El fichero "+fichero+ " no ha podido enviarse a "+receptor+" por:\n"+  e.getMessage()); System.out.flush();
+			System.out.println("El fichero "+fichero+ " no ha podido enviarse a "+receptor+"."); System.out.flush();
 			e.printStackTrace();
 		}
 	}

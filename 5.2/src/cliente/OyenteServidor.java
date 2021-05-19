@@ -88,7 +88,8 @@ System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+ms
 				int p_em = ((Msj_Information) msj).getEntero();
 				(new Receptor(origen,ip_em,p_em,fich)).start();
 
-				Cliente.info("El fichero "+fich+" se recibirá en el fondo.");
+				Cliente.info("Se ha establecido conexión con "+ip_em+"."
+						+ "El fichero "+fich+" se recibirá en el fondo.");
 				Cliente.release_flow();
 				break;
 			case CONFIRMACION_CERRAR_CONEXION:
