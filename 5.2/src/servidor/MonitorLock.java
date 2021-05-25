@@ -11,7 +11,7 @@ public class MonitorLock {
 	private HashMap<String,Usuario> usuarios;
 	
 	// Problema de readers-writers usando las tecnicas de la practica 4: monitores
-	// Prioridad a los readers
+	// (prioridad a los readers)
 	
 	private int nreaders;
 	private int nwriters;

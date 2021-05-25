@@ -10,6 +10,7 @@ public class MonitorSem {
 	Semaphore e;
 	Semaphore r;
 	Semaphore w;
+	
 	// Problema de readers-writers usando las tecnicas de la practica 3: semáforos con paso de testigo
 	
 	public MonitorSem() {
@@ -26,81 +27,51 @@ public class MonitorSem {
 	ObjectOutputStream buscar_output(String usuario) {
 		try {
 			e.acquire();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		if (nw > 0) {
-			dr = dr + 1;
-			e.release();
-			try {
+			if (nw > 0) {
+				dr = dr + 1;
+				e.release();
 				r.acquire();
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
 			}
-		}
-		nr = nr + 1;
-		if (dr > 0) { 
-			dr = dr -1;
-			r.release();
-		}
-		else {
-			e.release();
-		}
-		
-		//read
-		ObjectOutputStream ret = canales.get(usuario);
-		//
-		
-		try {
+			nr = nr + 1;
+			if (dr > 0) { 
+				dr = dr -1;
+				r.release();
+			}
+			else e.release();
+			
+			// READ
+			ObjectOutputStream ret = canales.get(usuario);
+			
 			e.acquire();
+			nr = nr-1;
+			if (nr == 0 && dw > 0) {
+				dw = dw -1;
+				w.release();
+			}
+			else e.release();
+			return ret;
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		nr = nr-1;
-		if (nr == 0 && dw > 0) {
-			dw = dw -1;
-			w.release();
-		}
-		else {
-			e.release();
-		}
-		return ret;
+		return null;
 	}
+	
 	// WRITE
 	boolean poner_output(String usuario, ObjectOutputStream fout) {
 		try {
 			e.acquire();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		if (nr > 0 || nw > 0) {
 			dw = dw + 1;
 			e.release();
-			try {
-				w.acquire();
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+			w.acquire();
 		}
 		nw = nw + 1;
 		e.release();
 		
-		//write
+		// WRITE
 		boolean ret =  canales.put(usuario, fout) == null;
-		//
 		
-		try {
-			e.acquire();
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+		e.acquire();
 		nw = nw-1;
 		if (dw > 0) {
 			dw = dw-1;
@@ -110,9 +81,11 @@ public class MonitorSem {
 			dr = dr -1;
 			r.release();
 		}
-		else {
-			e.release();
-		}
+		else e.release();
 		return ret;
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		return false;
 	}
 }
