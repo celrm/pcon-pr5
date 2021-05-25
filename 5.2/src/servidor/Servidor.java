@@ -40,6 +40,7 @@ public class Servidor {
 		    while (lectura.hasNextLine()) {
 		    	Usuario us = parseUsuario(lectura.nextLine());
 		    	datos.anadir_usuario(us);
+		    	System.out.println("Insertando: "+ us.getId());
 		    }
 		    lectura.close();
 		} catch (FileNotFoundException e) {

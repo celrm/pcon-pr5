@@ -1,5 +1,6 @@
 package servidor;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -118,7 +119,8 @@ System.out.println("Recibido "+msj.getTipo()+ " de "+msj.getOrigen()+" para "+ms
 				break;
 			}
 		}
-		} catch (Exception e) {
+		} catch (EOFException e) {return;}
+		catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

@@ -92,7 +92,7 @@ public class MonitorSem {
 		e.release();
 		
 		//write
-		boolean ret =  canales.put(usuario, fout) != null;
+		boolean ret =  canales.put(usuario, fout) == null;
 		//
 		
 		try {
